@@ -177,8 +177,8 @@ export default function NewsDetailPage({
 
           {/* Body */}
           <div
-            className="prose dark:prose-invert max-w-none text-lg leading-relaxed mt-8"
-            dangerouslySetInnerHTML={{ __html: news.content.replace(/\n/g, '<br/>') }}
+            className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 mt-8 leading-relaxed text-base sm:text-lg"
+            dangerouslySetInnerHTML={{ __html: news.content }}
           />
         </article>
       )}

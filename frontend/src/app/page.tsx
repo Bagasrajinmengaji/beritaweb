@@ -29,8 +29,9 @@ function formatDate(iso: string) {
 }
 
 function excerpt(text: string, maxLength = 160) {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trimEnd() + '…';
+  const plainText = text.replace(/<[^>]*>/g, '').trim();
+  if (plainText.length <= maxLength) return plainText;
+  return plainText.slice(0, maxLength).trimEnd() + '…';
 }
 
 function getImageSrc(imagePath: string): string {

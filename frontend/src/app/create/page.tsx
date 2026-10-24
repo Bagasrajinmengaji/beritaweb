@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X, ShieldAlert } from 'lucide-react';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 // ─── Google Icon SVG ──────────────────────────────────────────────────────────
 
@@ -137,8 +138,9 @@ export default function CreatePage() {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = 'Judul berita wajib diisi.';
     else if (title.trim().length < 5) errs.title = 'Judul minimal 5 karakter.';
-    if (!content.trim()) errs.content = 'Konten berita wajib diisi.';
-    else if (content.trim().length < 20) errs.content = 'Konten minimal 20 karakter.';
+    const textOnly = content.replace(/<[^>]*>/g, '').trim();
+    if (!textOnly) errs.content = 'Konten berita wajib diisi.';
+    else if (textOnly.length < 20) errs.content = 'Konten minimal 20 karakter.';
     if (!image) errs.image = 'Gambar wajib diunggah.';
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
@@ -355,27 +357,21 @@ export default function CreatePage() {
               )}
             </div>
 
-            {/* Content */}
+            {/* Content WYSIWYG */}
             <div>
               <label
-                htmlFor="news-content"
                 className="block text-sm font-semibold text-[oklch(0.28_0.008_250)] dark:text-[oklch(0.85_0.005_250)] mb-1.5"
               >
                 Konten Berita <span aria-hidden="true" className="text-red-500">*</span>
               </label>
-              <textarea
-                id="news-content"
-                rows={8}
-                value={content}
-                onChange={(e) => {
-                  setContent(e.target.value);
+              <RichTextEditor
+                content={content}
+                onChange={(html) => {
+                  setContent(html);
                   if (fieldErrors.content) setFieldErrors((p) => ({ ...p, content: '' }));
                 }}
-                placeholder="Tuliskan isi berita secara lengkap dan akurat…"
-                className={`${inputClass('content')} resize-y min-h-40`}
-                aria-required="true"
-                aria-describedby={fieldErrors.content ? 'content-error' : undefined}
                 disabled={isSubmitting}
+                hasError={Boolean(fieldErrors.content)}
               />
               {fieldErrors.content && (
                 <p id="content-error" role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
