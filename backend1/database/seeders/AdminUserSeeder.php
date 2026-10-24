@@ -14,9 +14,9 @@ class AdminUserSeeder extends Seeder
     {
         // Set user penguji utama sebagai admin
         User::updateOrCreate(
-            ['email' => 'bagas@portalberita.com'],
+            ['email' => '1202407009@students.itspku.ac.id'],
             [
-                'name' => 'Bagas Pratama',
+                'name' => 'Bagas Pramono',
                 'role' => 'admin',
             ]
         );
