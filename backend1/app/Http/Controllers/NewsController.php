@@ -11,69 +11,64 @@ class NewsController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * Mendukung sorting latest(), pencarian, serta pagination opsional untuk tabel Admin.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $news = News::latest()->get();
-        return response()->json($news, 200);
+        $query = News::latest();
+
+        // Pencarian opsional berdasarkan judul atau author
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('author', 'like', "%{$search}%");
+            });
+        }
+
+        // Jika request meminta per_page atau paginate, kembalikan paginated response
+        if ($request->has('per_page') || $request->boolean('paginate')) {
+            $perPage = (int) $request->query('per_page', 10);
+            return response()->json($query->paginate($perPage), 200);
+        }
+
+        // Default: kembalikan seluruh koleksi berita terurut terbaru
+        return response()->json($query->get(), 200);
     }
 
     /**
      * Store a newly created resource in storage.
+     * Dilindungi middleware auth:sanctum.
      */
     public function store(Request $request)
     {
-        // 1. Validasi input
         $request->validate([
-            'title'   => 'required|string',
+            'title'   => 'required|string|max:255',
             'author'  => 'nullable|string|max:255',
             'content' => 'required|string',
             'image'   => 'required|image|mimes:jpeg,jpg,png,webp|max:5048',
         ]);
 
-        // Ambil nama author dari user yang login, atau dari input jika ada
+        // Ambil nama author otomatis dari user yang login jika input author kosong
         $authorName = $request->input('author')
             ?: (auth()->check() ? auth()->user()->name : 'Redaksi');
 
-        $file = $request->file('image');
+        // Konversi gambar menggunakan Native PHP GD ke WebP (kualitas 80%)
+        $imageUrl = $this->convertAndStoreWebp($request->file('image'));
 
-        // 2. Olah & konversi gambar menggunakan Native PHP GD ke format .webp (kualitas 80%)
-        $imageContent = file_get_contents($file->getRealPath());
-        $gdImage = @imagecreatefromstring($imageContent);
-
-        if (!$gdImage) {
+        if (!$imageUrl) {
             return response()->json([
                 'message' => 'Gagal memproses file gambar dengan PHP GD.'
             ], 422);
         }
 
-        // Pertahankan transparansi untuk format PNG / WebP
-        if (!imageistruecolor($gdImage)) {
-            imagepalettetotruecolor($gdImage);
-        }
-        imagealphablending($gdImage, true);
-        imagesavealpha($gdImage, true);
-
-        // Ekspor ke buffer WebP kualitas 80%
-        ob_start();
-        imagewebp($gdImage, null, 80);
-        $webpData = ob_get_clean();
-        imagedestroy($gdImage);
-
-        // 3. Simpan file .webp ke folder storage/app/public/news/ menggunakan nama unik
-        $filename = Str::random(40) . '.webp';
-        $relativePath = 'news/' . $filename;
-        Storage::disk('public')->put($relativePath, $webpData);
-
-        // 4. Simpan path relatif gambar ke database MySQL (Storage::url(...))
         $news = News::create([
             'title'   => $request->title,
             'author'  => $authorName,
             'content' => $request->content,
-            'image'   => Storage::url($relativePath),
+            'image'   => $imageUrl,
         ]);
 
-        // 5. Kembalikan respons JSON 201 Created
         return response()->json([
             'message' => 'Berita berhasil diterbitkan.',
             'data'    => $news,
@@ -91,13 +86,15 @@ class NewsController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * Dilindungi middleware auth:sanctum.
+     * Endpoint: PUT/PATCH /api/news/{id}
      */
     public function update(Request $request, $id)
     {
         $news = News::findOrFail($id);
 
         $request->validate([
-            'title'   => 'sometimes|required|string',
+            'title'   => 'sometimes|required|string|max:255',
             'author'  => 'nullable|string|max:255',
             'content' => 'sometimes|required|string',
             'image'   => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5048',
@@ -105,51 +102,45 @@ class NewsController extends Controller
 
         $data = $request->only(['title', 'author', 'content']);
 
+        // Jika ada unggahan gambar baru
         if ($request->hasFile('image')) {
+            // 1. Hapus gambar lama dari storage fisik
             $this->deletePhysicalImage($news->image);
 
-            $file = $request->file('image');
-            $imageContent = file_get_contents($file->getRealPath());
-            $gdImage = @imagecreatefromstring($imageContent);
+            // 2. Olah & simpan gambar baru ke format .webp
+            $newImageUrl = $this->convertAndStoreWebp($request->file('image'));
 
-            if ($gdImage) {
-                if (!imageistruecolor($gdImage)) {
-                    imagepalettetotruecolor($gdImage);
-                }
-                imagealphablending($gdImage, true);
-                imagesavealpha($gdImage, true);
-
-                ob_start();
-                imagewebp($gdImage, null, 80);
-                $webpData = ob_get_clean();
-                imagedestroy($gdImage);
-
-                $filename = Str::random(40) . '.webp';
-                $relativePath = 'news/' . $filename;
-                Storage::disk('public')->put($relativePath, $webpData);
-
-                $data['image'] = Storage::url($relativePath);
+            if (!$newImageUrl) {
+                return response()->json([
+                    'message' => 'Gagal mengonversi gambar baru ke format WebP.'
+                ], 422);
             }
+
+            $data['image'] = $newImageUrl;
         }
 
+        // Update record database
         $news->update($data);
 
         return response()->json([
             'message' => 'Berita berhasil diperbarui.',
-            'data'    => $news,
+            'data'    => $news->fresh(),
         ], 200);
     }
 
     /**
      * Remove the specified resource from storage.
+     * Dilindungi middleware auth:sanctum.
+     * Endpoint: DELETE /api/news/{id}
      */
     public function destroy($id)
     {
         $news = News::findOrFail($id);
 
-        // Hapus file fisik gambar dari storage public jika data berita dihapus
+        // Hapus file fisik gambar dari storage public
         $this->deletePhysicalImage($news->image);
 
+        // Hapus record dari database MySQL
         $news->delete();
 
         return response()->json([
@@ -158,7 +149,40 @@ class NewsController extends Controller
     }
 
     /**
-     * Hapus file fisik gambar dari storage public
+     * Konversi file gambar ke .webp menggunakan Native PHP GD & simpan ke storage/app/public/news/
+     */
+    protected function convertAndStoreWebp($file): ?string
+    {
+        $imageContent = file_get_contents($file->getRealPath());
+        $gdImage = @imagecreatefromstring($imageContent);
+
+        if (!$gdImage) {
+            return null;
+        }
+
+        // Pertahankan transparansi untuk PNG/WebP
+        if (!imageistruecolor($gdImage)) {
+            imagepalettetotruecolor($gdImage);
+        }
+        imagealphablending($gdImage, true);
+        imagesavealpha($gdImage, true);
+
+        // Ekspor ke buffer WebP kualitas 80%
+        ob_start();
+        imagewebp($gdImage, null, 80);
+        $webpData = ob_get_clean();
+        imagedestroy($gdImage);
+
+        // Simpan file ke storage/app/public/news/ dengan nama unik
+        $filename = Str::random(40) . '.webp';
+        $relativePath = 'news/' . $filename;
+        Storage::disk('public')->put($relativePath, $webpData);
+
+        return Storage::url($relativePath);
+    }
+
+    /**
+     * Hapus file fisik gambar dari disk public
      */
     protected function deletePhysicalImage(?string $imageUrl): void
     {

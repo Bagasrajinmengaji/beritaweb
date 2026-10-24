@@ -10,7 +10,7 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 
 // ─── Auth — Protected ─────────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me',     [AuthController::class, 'me']);
+    Route::get('/me',      [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
@@ -18,9 +18,10 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/news',       [NewsController::class, 'index']);
 Route::get('/news/{id}',  [NewsController::class, 'show']);
 
-// ─── News — Protected endpoints ───────────────────────────────────────────────
+// ─── News — Protected endpoints (auth:sanctum) ────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/news',          [NewsController::class, 'store']);
-    Route::put('/news/{id}',      [NewsController::class, 'update']);
-    Route::delete('/news/{id}',   [NewsController::class, 'destroy']);
+    Route::post('/news',                             [NewsController::class, 'store']);
+    Route::match(['put', 'patch'], '/news/{id}',     [NewsController::class, 'update']);
+    Route::post('/news/{id}',                        [NewsController::class, 'update']); // Untuk multipart/form-data update dengan file
+    Route::delete('/news/{id}',                      [NewsController::class, 'destroy']);
 });

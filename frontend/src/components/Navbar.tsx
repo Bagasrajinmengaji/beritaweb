@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LogOut, PenLine } from 'lucide-react';
+import { Sun, Moon, LogOut, PenLine, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
@@ -149,6 +149,23 @@ export function Navbar() {
               Beranda
             </Link>
 
+            {/* Dashboard link (Khusus user yang sudah login) */}
+            {mounted && user && (
+              <Link
+                href="/admin"
+                className={[
+                  'hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
+                  pathname === '/admin'
+                    ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 font-semibold'
+                    : 'text-stone-600 hover:text-orange-600 dark:text-stone-300 dark:hover:text-orange-400 hover:bg-stone-200/60 dark:hover:bg-zinc-900',
+                ].join(' ')}
+                aria-current={pathname === '/admin' ? 'page' : undefined}
+              >
+                Dashboard
+              </Link>
+            )}
+
             {/* Dark mode toggle */}
             <button
               onClick={toggleTheme}
@@ -237,10 +254,20 @@ export function Navbar() {
                       </p>
                     </div>
 
-                    {/* Mobile: Tulis Berita link */}
+                    {/* Dashboard Admin Link */}
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors duration-100 focus-visible:outline-none"
+                      role="menuitem"
+                    >
+                      <LayoutDashboard size={14} aria-hidden="true" />
+                      Dashboard Admin
+                    </Link>
+
+                    {/* Tulis Berita Link */}
                     <Link
                       href="/create"
-                      className="sm:hidden flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors duration-100 focus-visible:outline-none"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors duration-100 focus-visible:outline-none"
                       role="menuitem"
                     >
                       <PenLine size={14} aria-hidden="true" />
