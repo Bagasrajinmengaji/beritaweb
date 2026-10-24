@@ -84,3 +84,46 @@ test('login fails with non-existent user', function () {
     $response->assertStatus(401)
         ->assertJson(['message' => 'Username atau password salah.']);
 });
+
+test('user can register new account successfully', function () {
+    $response = $this->postJson('/api/register', [
+        'name'     => 'Ahmad Junaidi',
+        'username' => 'ahmadjunaidi',
+        'email'    => 'ahmad@example.com',
+        'password' => 'password123',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJsonStructure(['message', 'token', 'user'])
+        ->assertJson([
+            'message' => 'Registrasi berhasil.',
+            'user'    => [
+                'name'     => 'Ahmad Junaidi',
+                'username' => 'ahmadjunaidi',
+                'email'    => 'ahmad@example.com',
+                'role'     => 'user',
+            ],
+        ]);
+
+    expect(User::where('email', 'ahmad@example.com')->exists())->toBeTrue();
+});
+
+test('registration validates duplicate username or email', function () {
+    User::create([
+        'name'     => 'Bagas Pramono',
+        'username' => 'bagasganteng',
+        'email'    => 'bagas@example.com',
+        'password' => Hash::make('987654321'),
+        'role'     => 'admin',
+    ]);
+
+    $response = $this->postJson('/api/register', [
+        'name'     => 'Orang Lain',
+        'username' => 'bagasganteng',
+        'email'    => 'lain@example.com',
+        'password' => 'password123',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['username']);
+});

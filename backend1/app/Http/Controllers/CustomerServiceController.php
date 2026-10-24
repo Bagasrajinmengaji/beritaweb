@@ -33,18 +33,36 @@ class CustomerServiceController extends Controller
                 ->where('is_read_by_admin', false)
                 ->count();
 
-            // Ringkasan permohonan aktif untuk notifikasi kebutuhan user di Admin
+            // Ringkasan seluruh permohonan & kebutuhan aktif user untuk notifikasi Admin
             $pendingRequests = CustomerServiceMessage::where('sender', 'user')
-                ->whereNotNull('news_id')
                 ->where('is_read_by_admin', false)
                 ->orderBy('created_at', 'desc')
-                ->take(10)
+                ->take(20)
                 ->get();
+
+            // Daftar percakapan/sesi unik pengguna untuk navigasi Admin
+            $allMessages = CustomerServiceMessage::orderBy('created_at', 'desc')->get();
+            $conversations = $allMessages->groupBy('session_id')->map(function ($group) {
+                $latest = $group->first();
+                $unread = $group->where('sender', 'user')->where('is_read_by_admin', false)->count();
+                return [
+                    'session_id'   => $latest->session_id,
+                    'user_id'      => $latest->user_id,
+                    'user_name'    => $latest->user_name,
+                    'user_email'   => $latest->user_email,
+                    'news_id'      => $latest->news_id,
+                    'news_title'   => $latest->news_title,
+                    'last_message' => $latest->message,
+                    'unread_count' => $unread,
+                    'updated_at'   => $latest->created_at,
+                ];
+            })->values();
 
             return response()->json([
                 'messages'         => $messages,
                 'unread_count'     => $unreadCount,
                 'pending_requests' => $pendingRequests,
+                'conversations'    => $conversations,
             ]);
         }
 
@@ -120,6 +138,13 @@ class CustomerServiceController extends Controller
             'status'           => 'open',
         ]);
 
+        // Jika admin membalas, tandai seluruh pesan user pada sesi ini sebagai sudah dibaca admin
+        if ($sender === 'admin') {
+            CustomerServiceMessage::where('session_id', $msg->session_id)
+                ->where('is_read_by_admin', false)
+                ->update(['is_read_by_admin' => true]);
+        }
+
         $botReply = null;
         // Jika pesan dari user dan berkaitan dengan penghapusan atau revisi, buat bot auto-reply
         if ($sender === 'user') {
@@ -158,11 +183,12 @@ class CustomerServiceController extends Controller
     {
         $user = auth('sanctum')->user();
         $isAdmin = $user && $user->role === 'admin';
+        $sessionId = $request->input('session_id', $request->query('session_id'));
 
         if ($isAdmin) {
             $query = CustomerServiceMessage::where('is_read_by_admin', false);
-            if ($request->filled('session_id')) {
-                $query->where('session_id', $request->query('session_id'));
+            if (!empty($sessionId)) {
+                $query->where('session_id', $sessionId);
             }
             $query->update(['is_read_by_admin' => true]);
             return response()->json(['message' => 'Pesan ditandai telah dibaca oleh admin.']);

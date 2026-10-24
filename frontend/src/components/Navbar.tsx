@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LogOut, PenLine, LayoutDashboard, LogIn } from 'lucide-react';
+import { Sun, Moon, LogOut, PenLine, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
@@ -213,14 +213,24 @@ export function Navbar() {
 
             {/* ── Belum Login ── */}
             {mounted && !user && (
-              <Link
-                id="btn-login"
-                href="/login"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/40 px-3.5 py-2 text-sm font-semibold text-orange-700 dark:text-orange-300 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
-              >
-                <LogIn size={15} aria-hidden="true" />
-                <span>Masuk</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  id="btn-register-navbar"
+                  href="/register"
+                  className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all shadow-xs"
+                >
+                  <UserPlus size={14} aria-hidden="true" />
+                  <span>Daftar</span>
+                </Link>
+                <Link
+                  id="btn-login"
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/40 px-3.5 py-2 text-sm font-semibold text-orange-700 dark:text-orange-300 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
+                >
+                  <LogIn size={15} aria-hidden="true" />
+                  <span>Masuk</span>
+                </Link>
+              </div>
             )}
 
             {/* ── Sudah Login ── */}

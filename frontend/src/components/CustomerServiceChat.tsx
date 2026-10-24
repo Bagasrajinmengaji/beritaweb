@@ -13,6 +13,8 @@ import {
   User as UserIcon,
   RefreshCw,
   Sparkles,
+  ChevronLeft,
+  Inbox,
 } from 'lucide-react';
 
 export interface NewsItemForChat {
@@ -34,6 +36,18 @@ interface DBMessage {
   is_read_by_admin: boolean;
   is_read_by_user: boolean;
   created_at: string;
+}
+
+interface SessionConversation {
+  sessionId: string;
+  userName: string;
+  userEmail?: string | null;
+  lastMessage: string;
+  newsTitle?: string;
+  newsId?: number;
+  unread: boolean;
+  unreadCount: number;
+  time: string;
 }
 
 interface CustomerServiceChatProps {
@@ -75,8 +89,8 @@ export function CustomerServiceChat({
   const [isSending, setIsSending] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Admin view state: jika user adalah admin, bisa melihat list sesi user
-  const [allSessions, setAllSessions] = useState<{ sessionId: string; userName: string; lastMessage: string; newsTitle?: string; unread: boolean; time: string }[]>([]);
+  // Admin view state: daftar percakapan pengguna
+  const [allSessions, setAllSessions] = useState<SessionConversation[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,7 +106,12 @@ export function CustomerServiceChat({
         if (saved) {
           const parsed = JSON.parse(saved);
           setCurrentUser(parsed);
-          setActiveSessionId(initialSessionId || getOrCreateSessionId(parsed.id));
+          const isUserAdmin = parsed.role === 'admin';
+          if (!isUserAdmin) {
+            setActiveSessionId(initialSessionId || getOrCreateSessionId(parsed.id));
+          } else if (initialSessionId) {
+            setActiveSessionId(initialSessionId);
+          }
         } else {
           setCurrentUser(null);
           setActiveSessionId(initialSessionId || getOrCreateSessionId());
@@ -150,7 +169,6 @@ export function CustomerServiceChat({
 
   // ─── Fetch Messages from Backend API ──────────────────────────────────────────
   const fetchMessages = useCallback(async () => {
-    if (!activeSessionId && !isAdmin) return;
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
       const headers: Record<string, string> = { Accept: 'application/json' };
@@ -167,10 +185,26 @@ export function CustomerServiceChat({
       const data = await res.json();
       if (Array.isArray(data.messages)) {
         setMessages(data.messages);
+      }
 
-        // Jika admin, ekstrak daftar sesi unik dari pesan masuk
-        if (isAdmin) {
-          const sessionMap = new Map<string, { sessionId: string; userName: string; lastMessage: string; newsTitle?: string; unread: boolean; time: string }>();
+      // Jika admin, ekstrak percakapan dari backend atau messages
+      if (isAdmin) {
+        if (Array.isArray(data.conversations) && data.conversations.length > 0) {
+          setAllSessions(
+            data.conversations.map((c: any) => ({
+              sessionId: c.session_id,
+              userName: c.user_name || 'Pengguna Portal',
+              userEmail: c.user_email,
+              lastMessage: c.last_message || '',
+              newsTitle: c.news_title || undefined,
+              newsId: c.news_id || undefined,
+              unread: Boolean(c.unread_count > 0),
+              unreadCount: c.unread_count || 0,
+              time: c.updated_at,
+            }))
+          );
+        } else if (Array.isArray(data.messages)) {
+          const sessionMap = new Map<string, SessionConversation>();
           data.messages.forEach((m: DBMessage) => {
             const sid = m.session_id || 'general';
             const existing = sessionMap.get(sid);
@@ -178,10 +212,13 @@ export function CustomerServiceChat({
             if (!existing || new Date(m.created_at) > new Date(existing.time)) {
               sessionMap.set(sid, {
                 sessionId: sid,
-                userName: m.user_name || 'Pengguna',
+                userName: m.user_name || 'Pengguna Portal',
+                userEmail: m.user_email,
                 lastMessage: m.message,
                 newsTitle: m.news_title || undefined,
+                newsId: m.news_id || undefined,
                 unread: isUnread || Boolean(existing?.unread),
+                unreadCount: (existing?.unreadCount || 0) + (isUnread ? 1 : 0),
                 time: m.created_at,
               });
             }
@@ -205,17 +242,16 @@ export function CustomerServiceChat({
 
   // Scroll to bottom
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && activeSessionId) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, activeSessionId]);
 
-  // Kirim permohonan hapus otomatis saat dibuka dengan targetNews pertama kali
+  // Kirim permohonan hapus otomatis saat dibuka dengan targetNews pertama kali oleh user
   useEffect(() => {
     if (!isOpen || !targetNews || !activeSessionId || isAdmin) return;
 
     const autoSendDeleteRequest = async () => {
-      // Cek apakah di daftar pesan sudah ada permohonan untuk berita ini
       const alreadyHas = messages.some((m) => m.news_id === targetNews.id && m.sender === 'user');
       if (alreadyHas) return;
 
@@ -255,6 +291,9 @@ export function CustomerServiceChat({
     if (e) e.preventDefault();
     if (!inputText.trim() || isSending) return;
 
+    const targetSessionId = activeSessionId || (isAdmin ? allSessions[0]?.sessionId : getOrCreateSessionId(currentUser?.id));
+    if (!targetSessionId) return;
+
     setIsSending(true);
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
     const headers: Record<string, string> = {
@@ -267,8 +306,8 @@ export function CustomerServiceChat({
       message: inputText.trim(),
       news_id: targetNews?.id || null,
       news_title: targetNews?.title || null,
-      session_id: activeSessionId || getOrCreateSessionId(currentUser?.id),
-      user_name: isAdmin ? 'Admin Redaksi' : (currentUser?.name || 'Pengguna'),
+      session_id: targetSessionId,
+      user_name: isAdmin ? 'Admin Redaksi' : (currentUser?.name || 'Pengguna Portal'),
       user_email: currentUser?.email || null,
       as_admin: isAdmin,
     };
@@ -282,6 +321,9 @@ export function CustomerServiceChat({
 
       if (res.ok) {
         setInputText('');
+        if (!activeSessionId) {
+          setActiveSessionId(targetSessionId);
+        }
         await fetchMessages();
       }
     } catch {
@@ -299,6 +341,9 @@ export function CustomerServiceChat({
     const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(defaultMsg)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
+
+  // Temukan sesi aktif untuk label header
+  const currentSessionMeta = allSessions.find((s) => s.sessionId === activeSessionId);
 
   return (
     <>
@@ -318,7 +363,7 @@ export function CustomerServiceChat({
         aria-label="Buka Chat Customer Service Admin"
         className={[
           'fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full px-4 py-3 shadow-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/50 cursor-pointer',
-          'bg-orange-600 hover:bg-orange-700 text-white active:scale-95',
+          'bg-orange-600 hover:bg-orange-700 text-white active:scale-[0.98]',
           isOpen ? 'ring-4 ring-orange-500/40 scale-105' : 'hover:scale-105',
         ].join(' ')}
       >
@@ -345,29 +390,52 @@ export function CustomerServiceChat({
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-950">
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-white font-bold text-sm shadow-sm">
-                <ShieldCheck size={18} />
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" />
-              </div>
-              <div>
+            <div className="flex items-center gap-2.5">
+              {isAdmin && activeSessionId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSessionId('');
+                    setTargetNews(null);
+                    fetchMessages();
+                  }}
+                  className="flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400 mr-1 p-1 rounded hover:bg-orange-50 dark:hover:bg-zinc-800 transition-colors"
+                  title="Kembali ke daftar seluruh percakapan"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Semua Sesi</span>
+                </button>
+              ) : (
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-white font-bold text-sm shadow-sm shrink-0">
+                  <ShieldCheck size={18} />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" />
+                </div>
+              )}
+
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h3 id="cs-chat-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    {isAdmin ? 'Panel Chat CS (Admin Redaksi)' : 'Customer Service Redaksi'}
+                  <h3 id="cs-chat-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                    {isAdmin
+                      ? activeSessionId
+                        ? `Chat dg ${currentSessionMeta?.userName || 'Pengguna'}`
+                        : 'Panel CS Admin Redaksi'
+                      : 'Customer Service Redaksi'}
                   </h3>
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
                     Online
                   </span>
                 </div>
-                <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate">
                   {isAdmin
-                    ? 'Anda dapat membalas pesan dan menindaklanjuti permohonan user'
+                    ? activeSessionId
+                      ? `Sesi ID: ${activeSessionId}`
+                      : 'Pilih percakapan pengguna untuk membalas'
                     : 'Terhubung langsung dengan Admin & Redaktur'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={async () => {
@@ -376,22 +444,24 @@ export function CustomerServiceChat({
                   setIsRefreshing(false);
                 }}
                 title="Segarkan Pesan"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
               </button>
-              <button
-                type="button"
-                onClick={handleOpenWhatsApp}
-                title="Buka WhatsApp Web"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
-              >
-                <Phone size={15} />
-              </button>
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleOpenWhatsApp}
+                  title="Buka WhatsApp Web"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
+                >
+                  <Phone size={15} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 aria-label="Tutup chat customer service"
               >
                 <X size={17} />
@@ -417,75 +487,160 @@ export function CustomerServiceChat({
             </div>
           )}
 
-          {/* Area Pesan Chat */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/40 dark:bg-zinc-950/30 text-xs sm:text-sm">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center text-stone-400 p-6">
-                <MessageCircle size={32} className="mb-2 text-stone-300 dark:text-zinc-700" />
-                <p className="font-medium text-xs">Belum ada percakapan</p>
-                <p className="text-[11px] mt-1 text-stone-400">
-                  Kirim pesan atau ajukan permohonan penghapusan artikel di form bawah.
-                </p>
+          {/* Area Konten: Daftar Percakapan Admin vs Isi Chat Thread */}
+          {isAdmin && !activeSessionId ? (
+            /* ── VIEW 1: DAFTAR PERCAKAPAN PENGGUNA UNTUK ADMIN ── */
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 bg-stone-50/50 dark:bg-zinc-950/40">
+              <div className="flex items-center justify-between px-1 pb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                  Daftar Pesan Masuk ({allSessions.length})
+                </span>
+                <span className="text-[11px] text-stone-400">Pilih untuk membalas</span>
               </div>
-            ) : (
-              messages.map((msg) => {
-                const isUserMessage = msg.sender === 'user';
-                const isBot = msg.sender === 'bot';
-                const isAdminMessage = msg.sender === 'admin';
 
-                // Posisi: jika Admin yang sedang melihat, maka pesan admin ada di kanan, pesan user ada di kiri.
-                // Jika User yang sedang melihat, maka pesan user ada di kanan, pesan admin/bot ada di kiri.
-                const isMe = isAdmin ? isAdminMessage : isUserMessage;
-
-                const timeStr = new Date(msg.created_at).toLocaleTimeString('id-ID', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-
-                return (
+              {allSessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-center text-stone-400 p-6">
+                  <Inbox size={36} className="mb-2 text-stone-300 dark:text-zinc-700" />
+                  <p className="font-semibold text-xs text-zinc-700 dark:text-zinc-300">Belum ada pesan masuk</p>
+                  <p className="text-[11px] mt-1 text-stone-400">
+                    Pesan dari pengguna akan muncul di sini secara langsung.
+                  </p>
+                </div>
+              ) : (
+                allSessions.map((sess) => (
                   <div
-                    key={msg.id}
-                    className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                    key={sess.sessionId}
+                    onClick={async () => {
+                      setActiveSessionId(sess.sessionId);
+                      if (sess.newsId && sess.newsTitle) {
+                        setTargetNews({ id: sess.newsId, title: sess.newsTitle });
+                      }
+                      // Tandai sesi sebagai dibaca
+                      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+                      if (token) {
+                        fetch(`${API}/cs/mark-as-read`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ session_id: sess.sessionId }),
+                        });
+                      }
+                    }}
+                    className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-3 hover:border-orange-500/80 hover:shadow-md transition-all cursor-pointer space-y-1.5"
                   >
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-stone-400 dark:text-stone-500 mb-1 px-1">
-                      <span>{msg.user_name}</span>
-                      {isAdminMessage && (
-                        <span className="px-1 py-0.2 rounded bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 text-[9px] font-bold">
-                          Admin Redaksi
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                        <UserIcon size={13} className="text-stone-400" />
+                        {sess.userName}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {sess.unread && (
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
+                            {sess.unreadCount > 0 ? `${sess.unreadCount} Pesan Baru` : 'Baru'}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-stone-400">
+                          {new Date(sess.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                      )}
-                      {isBot && (
-                        <span className="px-1 py-0.2 rounded bg-stone-200 text-stone-700 dark:bg-zinc-800 dark:text-stone-300 text-[9px] font-bold">
-                          Bot CS
-                        </span>
-                      )}
-                      <span>&bull; {timeStr}</span>
+                      </div>
                     </div>
 
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-xs leading-relaxed ${
-                        isMe
-                          ? 'bg-orange-600 text-white rounded-tr-none'
-                          : isBot
-                          ? 'bg-orange-50/80 dark:bg-orange-950/40 text-zinc-900 dark:text-zinc-100 border border-orange-200 dark:border-orange-900/50 rounded-tl-none'
-                          : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border border-stone-200 dark:border-zinc-700 rounded-tl-none'
-                      }`}
-                    >
-                      {msg.news_id && (
-                        <div className={`flex items-center gap-1.5 text-[11px] font-bold mb-1 pb-1 border-b ${isMe ? 'text-orange-200 border-orange-400/40' : 'text-orange-700 dark:text-orange-400 border-stone-200 dark:border-zinc-700'}`}>
-                          <Trash2 size={12} />
-                          <span>Artikel #{msg.news_id}: {msg.news_title || 'Terkait Berita'}</span>
-                        </div>
-                      )}
-                      <p className="whitespace-pre-wrap">{msg.message}</p>
+                    {sess.newsTitle ? (
+                      <p className="font-semibold text-orange-600 dark:text-orange-400 text-[11px] truncate flex items-center gap-1">
+                        <Trash2 size={11} />
+                        Permohonan Hapus #{sess.newsId}: {sess.newsTitle}
+                      </p>
+                    ) : (
+                      <p className="font-semibold text-sky-600 dark:text-sky-400 text-[11px] truncate flex items-center gap-1">
+                        💬 Konsultasi / Pertanyaan
+                      </p>
+                    )}
+
+                    <p className="text-stone-600 dark:text-stone-300 text-xs line-clamp-2">
+                      "{sess.lastMessage}"
+                    </p>
+
+                    <div className="pt-1 flex items-center justify-end text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400">
+                      <span>Buka & Balas Percakapan &rarr;</span>
                     </div>
                   </div>
-                );
-              })
-            )}
+                ))
+              )}
+            </div>
+          ) : (
+            /* ── VIEW 2: ISI PERCAKAPAN CHAT (THREAD) ── */
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/40 dark:bg-zinc-950/30 text-xs sm:text-sm">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-stone-400 p-6">
+                  <MessageCircle size={32} className="mb-2 text-stone-300 dark:text-zinc-700" />
+                  <p className="font-medium text-xs">Belum ada percakapan</p>
+                  <p className="text-[11px] mt-1 text-stone-400">
+                    Kirim pesan atau ajukan permohonan penghapusan artikel di form bawah.
+                  </p>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isUserMessage = msg.sender === 'user';
+                  const isBot = msg.sender === 'bot';
+                  const isAdminMessage = msg.sender === 'admin';
 
-            <div ref={messagesEndRef} />
-          </div>
+                  // Posisi: jika Admin yang sedang melihat, maka pesan admin ada di kanan, pesan user ada di kiri.
+                  // Jika User yang sedang melihat, maka pesan user ada di kanan, pesan admin/bot ada di kiri.
+                  const isMe = isAdmin ? isAdminMessage : isUserMessage;
+
+                  const timeStr = new Date(msg.created_at).toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                    >
+                      <div className="flex items-center gap-1 text-[10px] font-medium text-stone-400 dark:text-stone-500 mb-1 px-1">
+                        <span>{msg.user_name}</span>
+                        {isAdminMessage && (
+                          <span className="px-1.5 py-0.2 rounded bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 text-[9px] font-bold">
+                            Admin Redaksi
+                          </span>
+                        )}
+                        {isBot && (
+                          <span className="px-1.5 py-0.2 rounded bg-stone-200 text-stone-700 dark:bg-zinc-800 dark:text-stone-300 text-[9px] font-bold">
+                            Bot CS
+                          </span>
+                        )}
+                        <span>&bull; {timeStr}</span>
+                      </div>
+
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-xs leading-relaxed ${
+                          isMe
+                            ? 'bg-orange-600 text-white rounded-tr-none'
+                            : isBot
+                            ? 'bg-orange-50/80 dark:bg-orange-950/40 text-zinc-900 dark:text-zinc-100 border border-orange-200 dark:border-orange-900/50 rounded-tl-none'
+                            : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border border-stone-200 dark:border-zinc-700 rounded-tl-none'
+                        }`}
+                      >
+                        {msg.news_id && (
+                          <div className={`flex items-center gap-1.5 text-[11px] font-bold mb-1 pb-1 border-b ${isMe ? 'text-orange-200 border-orange-400/40' : 'text-orange-700 dark:text-orange-400 border-stone-200 dark:border-zinc-700'}`}>
+                            <Trash2 size={12} />
+                            <span>Artikel #{msg.news_id}: {msg.news_title || 'Terkait Berita'}</span>
+                          </div>
+                        )}
+                        <p className="whitespace-pre-wrap">{msg.message}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+          )}
 
           {/* Quick Buttons untuk Pengguna */}
           {!isAdmin && (
@@ -496,7 +651,7 @@ export function CustomerServiceChat({
                   setInputText('Berapa lama permohonan hapus diproses oleh redaksi?');
                   inputRef.current?.focus();
                 }}
-                className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer"
               >
                 ⏱ Estimasi Waktu?
               </button>
@@ -506,14 +661,14 @@ export function CustomerServiceChat({
                   setInputText('Mohon konfirmasi status artikel berita saya');
                   inputRef.current?.focus();
                 }}
-                className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer"
               >
                 📌 Cek Status Berita
               </button>
               <button
                 type="button"
                 onClick={handleOpenWhatsApp}
-                className="shrink-0 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1"
+                className="shrink-0 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <Phone size={10} />
                 WhatsApp
@@ -533,14 +688,17 @@ export function CustomerServiceChat({
               onChange={(e) => setInputText(e.target.value)}
               placeholder={
                 isAdmin
-                  ? 'Ketik balasan resmi dari Admin Redaksi...'
+                  ? activeSessionId
+                    ? `Ketik balasan resmi Admin untuk ${currentSessionMeta?.userName || 'Pengguna'}...`
+                    : 'Pilih salah satu percakapan di atas untuk membalas...'
                   : 'Tulis pesan untuk Admin CS...'
               }
-              className="flex-1 rounded-xl border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-stone-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              disabled={isAdmin && !activeSessionId && allSessions.length === 0}
+              className="flex-1 rounded-xl border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-stone-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={!inputText.trim() || isSending}
+              disabled={!inputText.trim() || isSending || (isAdmin && !activeSessionId && allSessions.length === 0)}
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
               title={isAdmin ? 'Kirim Balasan Admin' : 'Kirim Pesan'}
             >

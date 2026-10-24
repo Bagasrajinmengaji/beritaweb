@@ -236,8 +236,20 @@ function LoginForm() {
         </button>
       </form>
 
+      {/* Link ke Registrasi */}
+      <div className="mt-4 text-center text-xs text-stone-600 dark:text-stone-400">
+        Belum memiliki akun?{' '}
+        <Link
+          id="link-to-register"
+          href="/register"
+          className="font-bold text-orange-600 dark:text-orange-400 hover:underline"
+        >
+          Daftar sekarang
+        </Link>
+      </div>
+
       {/* Divider */}
-      <div className="relative my-6 text-center">
+      <div className="relative my-5 text-center">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-stone-200 dark:border-zinc-800" />
         </div>

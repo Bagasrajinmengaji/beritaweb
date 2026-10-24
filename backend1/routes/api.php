@@ -5,9 +5,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
 
 // ─── Auth — Public ─────────────────────────────────────────────────────────────
-Route::post('/login',               [AuthController::class, 'login']);
-Route::get('/auth/google',          [AuthController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+Route::post('/register',             [AuthController::class, 'register']);
+Route::post('/login',                [AuthController::class, 'login']);
+Route::get('/auth/google',           [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback',  [AuthController::class, 'handleGoogleCallback']);
 
 // ─── Auth — Protected ─────────────────────────────────────────────────────────
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

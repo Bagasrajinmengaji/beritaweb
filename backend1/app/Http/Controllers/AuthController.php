@@ -119,6 +119,54 @@ class AuthController extends Controller
     }
 
     /**
+     * Registrasi user baru menggunakan nama, username, email, dan password.
+     */
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name'     => 'required|string|max:100',
+            'username' => 'required|string|min:3|max:50|alpha_dash|unique:users,username',
+            'email'    => 'required|string|email|max:150|unique:users,email',
+            'password' => 'required|string|min:6',
+        ], [
+            'name.required'       => 'Nama lengkap wajib diisi.',
+            'username.required'   => 'Username wajib diisi.',
+            'username.min'        => 'Username minimal 3 karakter.',
+            'username.alpha_dash' => 'Username hanya boleh huruf, angka, tanda hubung (-), dan garis bawah (_).',
+            'username.unique'     => 'Username sudah digunakan, silakan pilih yang lain.',
+            'email.required'      => 'Alamat email wajib diisi.',
+            'email.email'         => 'Format email tidak valid.',
+            'email.unique'        => 'Email sudah terdaftar, silakan gunakan email lain atau login.',
+            'password.required'   => 'Password wajib diisi.',
+            'password.min'        => 'Password minimal harus 6 karakter.',
+        ]);
+
+        $user = User::create([
+            'name'     => $validated['name'],
+            'username' => strtolower($validated['username']),
+            'email'    => strtolower($validated['email']),
+            'password' => Hash::make($validated['password']),
+            'role'     => 'user',
+        ]);
+
+        // Buat token Sanctum awal agar langsung login
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Registrasi berhasil.',
+            'token'   => $token,
+            'user'    => [
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'username' => $user->username,
+                'email'    => $user->email,
+                'role'     => $user->role,
+                'avatar'   => $user->avatar,
+            ],
+        ], 201);
+    }
+
+    /**
      * Revoke token aktif (logout dari sisi backend).
      */
     public function logout(Request $request)

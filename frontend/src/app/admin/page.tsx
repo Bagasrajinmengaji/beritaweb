@@ -264,11 +264,15 @@ export default function AdminDashboardPage() {
   };
 
   // ── 2b. Buka Customer Service Chat (Minta Hapus / Konsultasi Admin) ──
-  const handleOpenCSChat = (item?: { id: number; title: string; author?: string | null }) => {
+  const handleOpenCSChat = (
+    item?: { id?: number; title?: string; author?: string | null },
+    sessionId?: string | null
+  ) => {
     window.dispatchEvent(
       new CustomEvent('openCSChat', {
         detail: {
-          targetNews: item ? { id: item.id, title: item.title, author: item.author } : undefined,
+          targetNews: item?.id ? { id: item.id, title: item.title || '', author: item.author } : undefined,
+          sessionId: sessionId || undefined,
         },
       })
     );
@@ -575,16 +579,20 @@ export default function AdminDashboardPage() {
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                                {req.user_name}
+                                {req.user_name || 'Pengguna Portal'}
                               </span>
                               <span className="text-[10px] text-stone-400">
                                 {new Date(req.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
 
-                            {req.news_title && (
+                            {req.news_title ? (
                               <p className="font-semibold text-orange-600 dark:text-orange-400 text-[11px] truncate">
                                 🗑️ Permohonan Hapus #{req.news_id}: {req.news_title}
+                              </p>
+                            ) : (
+                              <p className="font-semibold text-sky-600 dark:text-sky-400 text-[11px] truncate">
+                                💬 Pertanyaan / Konsultasi Pengguna
                               </p>
                             )}
 
@@ -600,9 +608,12 @@ export default function AdminDashboardPage() {
                                 type="button"
                                 onClick={() => {
                                   setNotifDropdownOpen(false);
-                                  handleOpenCSChat({ id: req.news_id!, title: req.news_title || '' });
+                                  handleOpenCSChat(
+                                    req.news_id ? { id: req.news_id, title: req.news_title || '' } : undefined,
+                                    req.session_id
+                                  );
                                 }}
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400 cursor-pointer"
                               >
                                 <span>Balas Chat</span>
                                 <span>&rarr;</span>
