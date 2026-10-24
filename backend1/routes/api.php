@@ -9,9 +9,9 @@ Route::get('/auth/google',          [AuthController::class, 'redirectToGoogle'])
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
 // ─── Auth — Protected ─────────────────────────────────────────────────────────
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me',      [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 // ─── News — Public endpoints ──────────────────────────────────────────────────

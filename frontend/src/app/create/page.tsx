@@ -123,8 +123,18 @@ export default function CreatePage() {
 
   useEffect(() => {
     setMounted(true);
-    const savedToken = localStorage.getItem('auth_token');
-    setToken(savedToken);
+    const syncToken = () => {
+      const savedToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      setToken(savedToken);
+    };
+
+    syncToken();
+    window.addEventListener('storage', syncToken);
+    window.addEventListener('authChange', syncToken);
+    return () => {
+      window.removeEventListener('storage', syncToken);
+      window.removeEventListener('authChange', syncToken);
+    };
   }, []);
 
   const handleLoginGoogle = () => {
@@ -150,7 +160,7 @@ export default function CreatePage() {
       e.preventDefault();
       if (!validate()) return;
 
-      const activeToken = localStorage.getItem('auth_token');
+      const activeToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
       if (!activeToken) {
         setToast({
           message: 'Sesi Anda telah berakhir. Silakan login kembali.',
@@ -180,9 +190,12 @@ export default function CreatePage() {
 
         if (!res.ok) {
           if (res.status === 401) {
+            localStorage.removeItem('token');
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
             localStorage.removeItem('auth_user');
             setToken(null);
+            window.dispatchEvent(new Event('authChange'));
             throw new Error('Sesi login telah habis. Silakan login dengan Google kembali.');
           }
           const errData = (await res.json().catch(() => ({}))) as {

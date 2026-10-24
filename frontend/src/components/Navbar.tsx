@@ -54,8 +54,8 @@ export function Navbar() {
 
   // Baca auth state dari localStorage
   const syncAuth = useCallback(() => {
-    const token = localStorage.getItem('auth_token');
-    const userRaw = localStorage.getItem('auth_user');
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    const userRaw = localStorage.getItem('user') || localStorage.getItem('auth_user');
     if (token && userRaw) {
       try {
         setUser(JSON.parse(userRaw) as AuthUser);
@@ -72,7 +72,11 @@ export function Navbar() {
     syncAuth();
 
     window.addEventListener('storage', syncAuth);
-    return () => window.removeEventListener('storage', syncAuth);
+    window.addEventListener('authChange', syncAuth);
+    return () => {
+      window.removeEventListener('storage', syncAuth);
+      window.removeEventListener('authChange', syncAuth);
+    };
   }, [syncAuth]);
 
   const isDark = resolvedTheme === 'dark';
@@ -83,19 +87,34 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem('auth_token');
+    // 1. Ambil token dari localStorage
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+
+    // 2. Kirim request POST ke endpoint logout dengan Authorization Bearer
     if (token) {
-      fetch(`${API}/logout`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
-      }).catch(() => {});
+      try {
+        await fetch(`${API}/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        });
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
     }
+
+    // 3. Hapus token dan data user dari localStorage
+    localStorage.removeItem('token');
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
     localStorage.removeItem('auth_user');
+
+    // 4. Perbarui state auth Navbar dan redirect pengguna kembali ke halaman utama (/)
     setUser(null);
+    window.dispatchEvent(new Event('authChange'));
+    window.dispatchEvent(new Event('storage'));
     router.push('/');
   };
 

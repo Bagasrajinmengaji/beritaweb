@@ -161,14 +161,24 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    const savedToken = localStorage.getItem('auth_token');
-    setToken(savedToken);
+    const syncToken = () => {
+      const savedToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      setToken(savedToken);
 
-    if (savedToken) {
-      fetchNews();
-    } else {
-      setLoading(false);
-    }
+      if (savedToken) {
+        fetchNews();
+      } else {
+        setLoading(false);
+      }
+    };
+
+    syncToken();
+    window.addEventListener('storage', syncToken);
+    window.addEventListener('authChange', syncToken);
+    return () => {
+      window.removeEventListener('storage', syncToken);
+      window.removeEventListener('authChange', syncToken);
+    };
   }, [fetchNews]);
 
   // ── 2. Handle Login Google ──
@@ -223,8 +233,12 @@ export default function AdminDashboardPage() {
 
       if (!res.ok) {
         if (res.status === 401) {
+          localStorage.removeItem('token');
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('auth_user');
           setToken(null);
+          window.dispatchEvent(new Event('authChange'));
           throw new Error('Sesi Anda berakhir. Silakan login kembali.');
         }
         const errData = (await res.json().catch(() => ({}))) as { message?: string };
@@ -267,8 +281,12 @@ export default function AdminDashboardPage() {
 
       if (!res.ok) {
         if (res.status === 401) {
+          localStorage.removeItem('token');
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('auth_user');
           setToken(null);
+          window.dispatchEvent(new Event('authChange'));
           throw new Error('Sesi Anda berakhir. Silakan login kembali.');
         }
         throw new Error('Gagal menghapus berita.');

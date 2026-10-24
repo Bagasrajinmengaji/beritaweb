@@ -234,3 +234,27 @@ test('can access /api/me when authenticated', function () {
     $response->assertStatus(200)
              ->assertJsonFragment(['email' => 'budi@example.com']);
 });
+
+test('unauthenticated user cannot logout', function () {
+    $response = $this->postJson('/api/logout');
+    $response->assertStatus(401);
+});
+
+test('authenticated user can logout and revokes current token', function () {
+    $user = User::factory()->create([
+        'name'  => 'Pengguna Logout',
+        'email' => 'logout@example.com',
+    ]);
+
+    $token = $user->createToken('test-token');
+
+    $response = $this->withHeader('Authorization', 'Bearer ' . $token->plainTextToken)
+                     ->postJson('/api/logout');
+
+    $response->assertStatus(200)
+             ->assertJson(['message' => 'Berhasil logout']);
+
+    // Pastikan token sudah terhapus di database
+    expect($user->tokens()->count())->toBe(0);
+});
+

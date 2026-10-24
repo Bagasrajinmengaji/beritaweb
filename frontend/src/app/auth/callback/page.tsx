@@ -13,15 +13,19 @@ function CallbackHandler() {
 
     if (token) {
       localStorage.setItem('auth_token', token);
+      localStorage.setItem('token', token);
 
       if (userRaw) {
         try {
           const user = JSON.parse(decodeURIComponent(userRaw));
           localStorage.setItem('auth_user', JSON.stringify(user));
+          localStorage.setItem('user', JSON.stringify(user));
         } catch {
           // ignore parsing error
         }
       }
+      window.dispatchEvent(new Event('authChange'));
+      window.dispatchEvent(new Event('storage'));
     }
 
     router.replace('/');
