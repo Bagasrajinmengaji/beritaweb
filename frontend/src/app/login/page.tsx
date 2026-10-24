@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck, Newspaper } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, LogIn, ArrowLeft, Newspaper } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
@@ -41,12 +41,6 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  const fillAdminCredentials = () => {
-    setUsername('bagasganteng');
-    setPassword('987654321');
-    setError(null);
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,26 +133,6 @@ function LoginForm() {
         </h1>
         <p className="mt-1.5 text-xs sm:text-sm text-stone-500 dark:text-stone-400">
           Akses portal berita, dashboard kurasi, dan publikasi artikel terkini.
-        </p>
-      </div>
-
-      {/* Admin Quick Fill Helper */}
-      <div className="mb-5 rounded-xl border border-orange-200/80 dark:border-orange-900/40 bg-orange-50/70 dark:bg-orange-950/30 p-3 text-xs">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-semibold text-orange-800 dark:text-orange-300">
-            <ShieldCheck size={15} />
-            <span>Akun Admin Penguji</span>
-          </div>
-          <button
-            type="button"
-            onClick={fillAdminCredentials}
-            className="rounded-md bg-orange-600 dark:bg-orange-500 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors shadow-sm"
-          >
-            Gunakan Akun Ini
-          </button>
-        </div>
-        <p className="mt-1.5 text-stone-600 dark:text-stone-300 text-[11px]">
-          Username: <code className="font-mono font-semibold text-orange-700 dark:text-orange-400">bagasganteng</code> &bull; Password: <code className="font-mono font-semibold text-orange-700 dark:text-orange-400">987654321</code>
         </p>
       </div>
 

@@ -24,6 +24,7 @@ import {
   LogIn,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { CustomerServiceChat } from '@/components/CustomerServiceChat';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -153,6 +154,10 @@ export default function AdminDashboardPage() {
   const [deletingNews, setDeletingNews] = useState<NewsItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Modal State: Customer Service Chat
+  const [csChatOpen, setCsChatOpen] = useState(false);
+  const [csTargetNews, setCsTargetNews] = useState<NewsItem | null>(null);
+
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
 
   // ── 1. Fetch News ──
@@ -217,7 +222,12 @@ export default function AdminDashboardPage() {
     window.location.href = `${API}/auth/google`;
   };
 
-  // ── 2b. Ajukan Hapus Berita via WhatsApp (Khusus role 'user') ──
+  // ── 2b. Buka Customer Service Chat (Minta Hapus / Konsultasi Admin) ──
+  const handleOpenCSChat = (item?: NewsItem) => {
+    setCsTargetNews(item || null);
+    setCsChatOpen(true);
+  };
+
   const handleRequestDeleteWA = (item: NewsItem) => {
     const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WA ?? '6281234567890';
     const userName = currentUser?.name || 'Penulis Portal Berita';
@@ -465,17 +475,29 @@ export default function AdminDashboardPage() {
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
               {currentUser?.role === 'admin'
                 ? 'Kelola, edit, dan pantau seluruh artikel berita yang dipublikasikan.'
-                : 'Kelola artikel Anda. Pengajuan penghapusan berita diteruskan langsung ke Admin via WhatsApp.'}
+                : 'Kelola artikel Anda. Pengajuan penghapusan berita dapat dilakukan langsung melalui Customer Service Chat.'}
             </p>
           </div>
 
-          <Link
-            href="/create"
-            className="inline-flex items-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm self-start sm:self-auto"
-          >
-            <Plus size={16} aria-hidden="true" />
-            <span>Tulis Berita Baru</span>
-          </Link>
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            <button
+              id="btn-open-cs-chat"
+              type="button"
+              onClick={() => handleOpenCSChat()}
+              className="inline-flex items-center gap-2 rounded-lg border border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 px-3.5 py-2.5 text-sm font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <MessageCircle size={15} />
+              <span>Customer Service</span>
+            </button>
+
+            <Link
+              href="/create"
+              className="inline-flex items-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
+            >
+              <Plus size={16} aria-hidden="true" />
+              <span>Tulis Berita Baru</span>
+            </Link>
+          </div>
         </div>
 
         {/* ── 2. Ringkasan Statistik (Stats Cards) ── */}
@@ -687,13 +709,13 @@ export default function AdminDashboardPage() {
                           ) : (
                             <button
                               type="button"
-                              onClick={() => handleRequestDeleteWA(item)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-orange-300 dark:border-zinc-700 bg-orange-50 dark:bg-zinc-800 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-zinc-700 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-xs active:scale-95 whitespace-nowrap"
-                              title="Minta Hapus (Chat Admin via WhatsApp)"
+                              onClick={() => handleOpenCSChat(item)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-xs active:scale-95 whitespace-nowrap cursor-pointer"
+                              title="Minta Hapus (Chat Customer Service)"
                               aria-label={`Minta Hapus ${item.title}`}
                             >
                               <MessageCircle size={13} aria-hidden="true" />
-                              <span className="hidden sm:inline">Minta Hapus</span>
+                              <span>Minta Hapus (Chat CS)</span>
                             </button>
                           )}
                         </div>
@@ -916,6 +938,14 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* ── MODAL: CUSTOMER SERVICE CHAT ── */}
+      <CustomerServiceChat
+        isOpen={csChatOpen}
+        onClose={() => setCsChatOpen(false)}
+        targetNews={csTargetNews}
+        currentUser={currentUser}
+      />
     </>
   );
 }
