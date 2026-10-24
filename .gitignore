@@ -1,0 +1,30 @@
+# Project Context & Documentation (Protected from git push)
+PROJECT_CONTEXT.md
+*REKAP*
+*rekap*
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.env
+
+# Dependencies & build outputs
+node_modules/
+vendor/
+.next/
+out/
+build/
+public/storage
+public/hot
+
+# Logs & cache
+*.log
+.phpunit.result.cache
+.phpunit.cache/
+
+# System & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
