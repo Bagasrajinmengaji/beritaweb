@@ -165,75 +165,88 @@ body {
 
 /* 1. Font Size Scaling */
 html.a11y-font-medium {
-  font-size: 115% !important;
+  font-size: 118% !important;
 }
 html.a11y-font-large {
-  font-size: 130% !important;
+  font-size: 136% !important;
 }
 
 /* 2. Reduced Motion */
 html.a11y-reduce-motion *,
 html.a11y-reduce-motion *::before,
 html.a11y-reduce-motion *::after {
+  animation: none !important;
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
+  transition: none !important;
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
 
-/* 3. Enhanced Focus Indicator (Orange outline) */
-html.a11y-enhanced-focus :focus-visible {
+/* 3. Enhanced Focus Indicator (High-visibility outline) */
+html.a11y-enhanced-focus *:focus,
+html.a11y-enhanced-focus *:focus-visible {
   outline: 4px solid #ea580c !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.45) !important;
-  border-radius: 6px !important;
+  box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.45) !important;
 }
 
-/* 4. High Contrast Mode (Deep Black background, sharp yellow & white text) */
-html.a11y-high-contrast body,
-html.a11y-high-contrast main,
-html.a11y-high-contrast header,
-html.a11y-high-contrast footer,
-html.a11y-high-contrast section,
-html.a11y-high-contrast article,
-html.a11y-high-contrast table,
-html.a11y-high-contrast thead,
-html.a11y-high-contrast tbody,
-html.a11y-high-contrast tr,
-html.a11y-high-contrast td,
-html.a11y-high-contrast th,
-html.a11y-high-contrast .bg-white,
-html.a11y-high-contrast .bg-stone-50,
-html.a11y-high-contrast .dark\:bg-zinc-900,
-html.a11y-high-contrast .dark\:bg-zinc-950 {
+/* 4. High Contrast Mode (Deep Black #000000, Sharp Yellow #facc15, Pure White #ffffff, Cyan #38bdf8) */
+html.a11y-high-contrast {
+  color-scheme: dark !important;
+}
+
+html.a11y-high-contrast,
+html.a11y-high-contrast body {
   background-color: #000000 !important;
-  color: #facc15 !important; /* Sharp Yellow */
-  border-color: #facc15 !important;
-}
-
-html.a11y-high-contrast h1,
-html.a11y-high-contrast h2,
-html.a11y-high-contrast h3,
-html.a11y-high-contrast h4,
-html.a11y-high-contrast h5,
-html.a11y-high-contrast h6,
-html.a11y-high-contrast strong {
-  color: #ffffff !important;
-}
-
-html.a11y-high-contrast p,
-html.a11y-high-contrast span {
   color: #facc15 !important;
 }
 
-html.a11y-high-contrast a,
-html.a11y-high-contrast button {
-  color: #38bdf8 !important; /* Sharp Light Blue / Cyan for actions */
+/* Override all container backgrounds, text, and borders except accessibility widget */
+html.a11y-high-contrast *:not(#accessibility-menu-panel):not(#accessibility-menu-panel *):not(#btn-accessibility-widget):not(#btn-accessibility-widget *) {
   border-color: #facc15 !important;
 }
 
-html.a11y-high-contrast a:hover,
-html.a11y-high-contrast button:hover {
+html.a11y-high-contrast body *:not(#accessibility-menu-panel):not(#accessibility-menu-panel *):not(#btn-accessibility-widget):not(#btn-accessibility-widget *) {
+  background-color: #000000 !important;
+  color: #facc15 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html.a11y-high-contrast h1:not(#accessibility-menu-panel *),
+html.a11y-high-contrast h2:not(#accessibility-menu-panel *),
+html.a11y-high-contrast h3:not(#accessibility-menu-panel *),
+html.a11y-high-contrast h4:not(#accessibility-menu-panel *),
+html.a11y-high-contrast h5:not(#accessibility-menu-panel *),
+html.a11y-high-contrast h6:not(#accessibility-menu-panel *),
+html.a11y-high-contrast strong:not(#accessibility-menu-panel *) {
+  color: #ffffff !important;
+}
+
+html.a11y-high-contrast a:not(#accessibility-menu-panel *):not(#btn-accessibility-widget),
+html.a11y-high-contrast button:not(#accessibility-menu-panel *):not(#btn-accessibility-widget) {
+  color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
   text-decoration: underline !important;
+}
+
+html.a11y-high-contrast a:hover:not(#accessibility-menu-panel *):not(#btn-accessibility-widget),
+html.a11y-high-contrast button:hover:not(#accessibility-menu-panel *):not(#btn-accessibility-widget) {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+html.a11y-high-contrast input:not(#accessibility-menu-panel *),
+html.a11y-high-contrast textarea:not(#accessibility-menu-panel *),
+html.a11y-high-contrast select:not(#accessibility-menu-panel *) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #facc15 !important;
+}
+
+html.a11y-high-contrast img:not(#accessibility-menu-panel *) {
+  filter: contrast(120%) brightness(90%) !important;
+  border: 2px solid #facc15 !important;
 }
 
