@@ -1,9 +1,34 @@
 'use client';
 
-import { useState, useRef, useCallback, type FormEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X, ShieldAlert } from 'lucide-react';
+
+// ─── Google Icon SVG ──────────────────────────────────────────────────────────
+
+function GoogleIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +108,9 @@ export default function CreatePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [mounted, setMounted] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState<File | null>(null);
@@ -91,6 +119,18 @@ export default function CreatePage() {
 
   // Client-side validation errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
+
+  useEffect(() => {
+    setMounted(true);
+    const savedToken = localStorage.getItem('auth_token');
+    setToken(savedToken);
+  }, []);
+
+  const handleLoginGoogle = () => {
+    window.location.href = `${API}/auth/google`;
+  };
 
   // ── Validation ──
   function validate(): boolean {
@@ -110,6 +150,16 @@ export default function CreatePage() {
       e.preventDefault();
       if (!validate()) return;
 
+      const activeToken = localStorage.getItem('auth_token');
+      if (!activeToken) {
+        setToast({
+          message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+          type: 'error',
+        });
+        setToken(null);
+        return;
+      }
+
       setIsSubmitting(true);
       setToast(null);
 
@@ -118,16 +168,23 @@ export default function CreatePage() {
       formData.append('content', content.trim());
       if (image) formData.append('image', image);
 
-      const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
-
       try {
         const res = await fetch(`${API}/news`, {
           method: 'POST',
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${activeToken}`,
+          },
           body: formData,
         });
 
         if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+            setToken(null);
+            throw new Error('Sesi login telah habis. Silakan login dengan Google kembali.');
+          }
           const errData = (await res.json().catch(() => ({}))) as {
             message?: string;
             errors?: Record<string, string[]>;
@@ -143,14 +200,14 @@ export default function CreatePage() {
 
         setTimeout(() => {
           router.push('/');
-        }, 2000);
+        }, 1500);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Terjadi kesalahan.';
         setToast({ message, type: 'error' });
         setIsSubmitting(false);
       }
     },
-    [title, content, image, router],
+    [title, content, image, router, API],
   );
 
   // ── Drag-and-drop ──
@@ -171,6 +228,64 @@ export default function CreatePage() {
         : 'border-black/12 dark:border-white/12',
     ].join(' ');
 
+  // Loading skeleton state sebelum mounted
+  if (!mounted) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-14 animate-pulse">
+        <div className="skeleton h-5 w-24 rounded mb-8" />
+        <div className="rounded-2xl border border-black/6 dark:border-white/6 p-8 space-y-6">
+          <div className="skeleton h-8 w-48 rounded" />
+          <div className="skeleton h-4 w-72 rounded" />
+          <div className="skeleton h-10 w-full rounded" />
+          <div className="skeleton h-32 w-full rounded" />
+        </div>
+      </main>
+    );
+  }
+
+  // ── Proteksi Halaman: Jika Belum Login ──
+  if (!token) {
+    return (
+      <main id="main-content" className="mx-auto max-w-lg px-4 sm:px-6 py-16 sm:py-24" role="main">
+        <div className="rounded-2xl border border-black/8 dark:border-white/8 bg-surface-50 dark:bg-[oklch(0.13_0.006_250)] p-8 text-center shadow-lg">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">
+            <ShieldAlert size={30} aria-hidden="true" />
+          </div>
+
+          <h1
+            className="text-2xl font-bold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] mb-2"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Akses Terbatas
+          </h1>
+
+          <p className="text-sm text-[oklch(0.45_0.007_250)] dark:text-[oklch(0.6_0.006_250)] leading-relaxed mb-6">
+            Anda harus login dengan Google untuk menulis dan menerbitkan berita di Portal Berita.
+          </p>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleLoginGoogle}
+              className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[oklch(0.18_0.008_250)] px-4 py-3 text-sm font-semibold text-[oklch(0.18_0.008_250)] dark:text-white hover:bg-black/4 dark:hover:bg-white/6 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm"
+            >
+              <GoogleIcon size={18} />
+              <span>Masuk dengan Google</span>
+            </button>
+
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition-colors py-2"
+            >
+              <ArrowLeft size={15} aria-hidden="true" />
+              Kembali ke Beranda
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Form Tulis Berita (User Sudah Login) ──
   return (
     <>
       {toast && (

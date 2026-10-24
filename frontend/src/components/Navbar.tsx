@@ -212,7 +212,7 @@ export function Navbar() {
                       />
                     ) : (
                       <span
-                        className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-brand-500 text-white text-xs font-bold select-none border-2 border-brand-500/30"
+                        className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-brand-500 text-white text-xs font-bold select-none border-2 border-brand-500/30"
                         aria-hidden="true"
                       >
                         {initials}
