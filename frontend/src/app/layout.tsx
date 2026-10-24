@@ -4,6 +4,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Navbar } from '@/components/Navbar';
+import { AccessibilityWidget } from '@/components/AccessibilityWidget';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -51,6 +52,7 @@ export default function RootLayout({
           <div className="flex-1">
             {children}
           </div>
+          <AccessibilityWidget />
           <footer className="mt-auto border-t border-stone-200 dark:border-zinc-800 py-8 text-center text-sm text-stone-500 dark:text-stone-400">
             <p>© 2026 Portal Berita. Seluruh hak cipta dilindungi.</p>
           </footer>

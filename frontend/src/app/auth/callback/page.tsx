@@ -10,20 +10,38 @@ function CallbackHandler() {
   useEffect(() => {
     const token = searchParams.get('token');
     const userRaw = searchParams.get('user');
+    const paramRole = searchParams.get('role');
+    const paramName = searchParams.get('name');
+    const paramEmail = searchParams.get('email');
 
     if (token) {
       localStorage.setItem('auth_token', token);
       localStorage.setItem('token', token);
 
+      let user: { name: string; email: string; role: string; avatar?: string | null } = {
+        name: paramName || 'Pengguna',
+        email: paramEmail || 'user@portalberita.com',
+        role: paramRole || 'user',
+      };
+
       if (userRaw) {
         try {
-          const user = JSON.parse(decodeURIComponent(userRaw));
-          localStorage.setItem('auth_user', JSON.stringify(user));
-          localStorage.setItem('user', JSON.stringify(user));
+          const parsed = JSON.parse(decodeURIComponent(userRaw));
+          user = { ...user, ...parsed };
         } catch {
           // ignore parsing error
         }
       }
+
+      if (paramRole) {
+        user.role = paramRole;
+      }
+
+      localStorage.setItem('auth_user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('role', user.role);
+      localStorage.setItem('user_role', user.role);
+
       window.dispatchEvent(new Event('authChange'));
       window.dispatchEvent(new Event('storage'));
     }

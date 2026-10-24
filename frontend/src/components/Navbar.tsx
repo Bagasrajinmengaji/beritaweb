@@ -12,6 +12,7 @@ import { usePathname, useRouter } from 'next/navigation';
 interface AuthUser {
   name: string;
   email: string;
+  role?: string | null;
   avatar?: string | null;
 }
 
@@ -57,9 +58,14 @@ export function Navbar() {
   const syncAuth = useCallback(() => {
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
     const userRaw = localStorage.getItem('user') || localStorage.getItem('auth_user');
+    const storedRole = localStorage.getItem('role') || localStorage.getItem('user_role');
     if (token && userRaw) {
       try {
-        setUser(JSON.parse(userRaw) as AuthUser);
+        const parsed = JSON.parse(userRaw) as AuthUser;
+        if (!parsed.role && storedRole) {
+          parsed.role = storedRole;
+        }
+        setUser(parsed);
       } catch {
         setUser(null);
       }
@@ -111,6 +117,8 @@ export function Navbar() {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('user_role');
 
     // 4. Perbarui state auth Navbar dan redirect pengguna kembali ke halaman utama (/)
     setUser(null);
@@ -274,9 +282,21 @@ export function Navbar() {
                   >
                     {/* User info */}
                     <div className="px-4 py-3 border-b border-stone-100 dark:border-zinc-800">
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                        {user.name}
-                      </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                          {user.name}
+                        </p>
+                        <span
+                          className={[
+                            'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                            user.role === 'admin'
+                              ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                              : 'bg-stone-100 text-stone-600 dark:bg-zinc-800 dark:text-stone-300',
+                          ].join(' ')}
+                        >
+                          {user.role === 'admin' ? 'Admin' : 'Penulis'}
+                        </span>
+                      </div>
                       <p className="text-xs text-stone-500 dark:text-stone-400 truncate mt-0.5">
                         {user.email}
                       </p>

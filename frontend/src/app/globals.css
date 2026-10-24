@@ -160,3 +160,80 @@ body {
 .dark .prose a:hover {
   color: #fdba74; /* orange-300 */
 }
+
+/* ─── Accessibility (A11y) Feature Classes ─── */
+
+/* 1. Font Size Scaling */
+html.a11y-font-medium {
+  font-size: 115% !important;
+}
+html.a11y-font-large {
+  font-size: 130% !important;
+}
+
+/* 2. Reduced Motion */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 3. Enhanced Focus Indicator (Orange outline) */
+html.a11y-enhanced-focus :focus-visible {
+  outline: 4px solid #ea580c !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.45) !important;
+  border-radius: 6px !important;
+}
+
+/* 4. High Contrast Mode (Deep Black background, sharp yellow & white text) */
+html.a11y-high-contrast body,
+html.a11y-high-contrast main,
+html.a11y-high-contrast header,
+html.a11y-high-contrast footer,
+html.a11y-high-contrast section,
+html.a11y-high-contrast article,
+html.a11y-high-contrast table,
+html.a11y-high-contrast thead,
+html.a11y-high-contrast tbody,
+html.a11y-high-contrast tr,
+html.a11y-high-contrast td,
+html.a11y-high-contrast th,
+html.a11y-high-contrast .bg-white,
+html.a11y-high-contrast .bg-stone-50,
+html.a11y-high-contrast .dark\:bg-zinc-900,
+html.a11y-high-contrast .dark\:bg-zinc-950 {
+  background-color: #000000 !important;
+  color: #facc15 !important; /* Sharp Yellow */
+  border-color: #facc15 !important;
+}
+
+html.a11y-high-contrast h1,
+html.a11y-high-contrast h2,
+html.a11y-high-contrast h3,
+html.a11y-high-contrast h4,
+html.a11y-high-contrast h5,
+html.a11y-high-contrast h6,
+html.a11y-high-contrast strong {
+  color: #ffffff !important;
+}
+
+html.a11y-high-contrast p,
+html.a11y-high-contrast span {
+  color: #facc15 !important;
+}
+
+html.a11y-high-contrast a,
+html.a11y-high-contrast button {
+  color: #38bdf8 !important; /* Sharp Light Blue / Cyan for actions */
+  border-color: #facc15 !important;
+}
+
+html.a11y-high-contrast a:hover,
+html.a11y-high-contrast button:hover {
+  text-decoration: underline !important;
+}
+

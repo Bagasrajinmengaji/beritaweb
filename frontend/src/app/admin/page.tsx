@@ -20,10 +20,18 @@ import {
   Upload,
   Calendar,
   User as UserIcon,
+  MessageCircle,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+interface AuthUser {
+  name: string;
+  email: string;
+  role?: string | null;
+  avatar?: string | null;
+}
 
 interface NewsItem {
   id: number;
@@ -122,6 +130,7 @@ export default function AdminDashboardPage() {
 
   const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +172,25 @@ export default function AdminDashboardPage() {
     setMounted(true);
     const syncToken = () => {
       const savedToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const savedUser = localStorage.getItem('user') || localStorage.getItem('auth_user');
+      const savedRole = localStorage.getItem('role') || localStorage.getItem('user_role');
       setToken(savedToken);
+
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser) as AuthUser;
+          if (savedRole) {
+            parsed.role = savedRole;
+          }
+          setCurrentUser(parsed);
+        } catch {
+          setCurrentUser(null);
+        }
+      } else if (savedRole) {
+        setCurrentUser({ name: 'Pengguna', email: '', role: savedRole });
+      } else {
+        setCurrentUser(null);
+      }
 
       if (savedToken) {
         fetchNews();
@@ -184,6 +211,15 @@ export default function AdminDashboardPage() {
   // ── 2. Handle Login Google ──
   const handleLoginGoogle = () => {
     window.location.href = `${API}/auth/google`;
+  };
+
+  // ── 2b. Ajukan Hapus Berita via WhatsApp (Khusus role 'user') ──
+  const handleRequestDeleteWA = (item: NewsItem) => {
+    const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WA ?? '6281234567890';
+    const userName = currentUser?.name || 'Penulis Portal Berita';
+    const message = `Halo Admin, saya ${userName} ingin mengajukan penghapusan berita dengan Judul: '${item.title}' (ID: ${item.id}). Mohon konfirmasinya.`;
+    const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   // ── 3. Open Edit Modal ──
@@ -394,14 +430,30 @@ export default function AdminDashboardPage() {
         {/* ── Top Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1
-              className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Dashboard Redaksi
-            </h1>
+            <div className="flex items-center gap-2.5">
+              <h1
+                className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Dashboard Redaksi
+              </h1>
+              {currentUser && (
+                <span
+                  className={[
+                    'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider',
+                    currentUser.role === 'admin'
+                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                      : 'bg-stone-200 text-stone-700 dark:bg-zinc-800 dark:text-stone-300',
+                  ].join(' ')}
+                >
+                  {currentUser.role === 'admin' ? 'Admin' : 'Penulis'}
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-              Kelola, edit, dan pantau seluruh artikel berita yang dipublikasikan.
+              {currentUser?.role === 'admin'
+                ? 'Kelola, edit, dan pantau seluruh artikel berita yang dipublikasikan.'
+                : 'Kelola artikel Anda. Pengajuan penghapusan berita diteruskan langsung ke Admin via WhatsApp.'}
             </p>
           </div>
 
@@ -531,7 +583,7 @@ export default function AdminDashboardPage() {
                   <th scope="col" className="px-5 py-3.5 w-36">
                     Tanggal
                   </th>
-                  <th scope="col" className="px-5 py-3.5 text-right w-32">
+                  <th scope="col" className="px-5 py-3.5 text-right w-44">
                     Aksi
                   </th>
                 </tr>
@@ -608,16 +660,29 @@ export default function AdminDashboardPage() {
                             <Edit3 size={14} aria-hidden="true" />
                           </button>
 
-                          {/* Delete Button */}
-                          <button
-                            type="button"
-                            onClick={() => setDeletingNews(item)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 dark:border-zinc-800 text-stone-600 dark:text-stone-300 hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                            title="Hapus Berita"
-                            aria-label={`Hapus ${item.title}`}
-                          >
-                            <Trash2 size={14} aria-hidden="true" />
-                          </button>
+                          {/* Tombol Hapus (Admin) ATAU Minta Hapus Chat Admin (User) */}
+                          {currentUser?.role === 'admin' ? (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingNews(item)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 dark:border-zinc-800 text-stone-600 dark:text-stone-300 hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                              title="Hapus Berita"
+                              aria-label={`Hapus ${item.title}`}
+                            >
+                              <Trash2 size={14} aria-hidden="true" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRequestDeleteWA(item)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-orange-300 dark:border-zinc-700 bg-orange-50 dark:bg-zinc-800 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-zinc-700 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-xs active:scale-95 whitespace-nowrap"
+                              title="Minta Hapus (Chat Admin via WhatsApp)"
+                              aria-label={`Minta Hapus ${item.title}`}
+                            >
+                              <MessageCircle size={13} aria-hidden="true" />
+                              <span className="hidden sm:inline">Minta Hapus</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
