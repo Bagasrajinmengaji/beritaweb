@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X, ShieldAlert, LogIn } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X, ShieldAlert, LogIn, User as UserIcon } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
 // ─── Google Icon SVG ──────────────────────────────────────────────────────────
@@ -111,6 +111,7 @@ export default function CreatePage() {
   const [token, setToken] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,6 +127,19 @@ export default function CreatePage() {
     const syncToken = () => {
       const savedToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
       setToken(savedToken);
+
+      // Otomatis isi nama penulis dari akun user jika belum diisi manual
+      const savedUser = localStorage.getItem('user') || localStorage.getItem('auth_user');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (parsed.name) {
+            setAuthor((prev) => prev || parsed.name);
+          }
+        } catch {
+          // ignore
+        }
+      }
     };
 
     syncToken();
@@ -175,6 +189,9 @@ export default function CreatePage() {
 
       const formData = new FormData();
       formData.append('title', title.trim());
+      if (author.trim()) {
+        formData.append('author', author.trim());
+      }
       formData.append('content', content.trim());
       if (image) formData.append('image', image);
 
@@ -374,6 +391,34 @@ export default function CreatePage() {
                   {fieldErrors.title}
                 </p>
               )}
+            </div>
+
+            {/* Author / Penulis */}
+            <div>
+              <label
+                htmlFor="news-author"
+                className="block text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1.5"
+              >
+                Nama Penulis (Author)
+              </label>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-stone-400">
+                  <UserIcon size={16} />
+                </div>
+                <input
+                  id="news-author"
+                  type="text"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="Masukkan nama penulis berita (opsional)…"
+                  className="w-full rounded-xl border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-850 pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-stone-400 dark:placeholder-zinc-500 focus:border-orange-500 focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                  disabled={isSubmitting}
+                  maxLength={255}
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-stone-500 dark:text-stone-400">
+                Otomatis menggunakan nama akun Anda jika dikosongkan.
+              </p>
             </div>
 
             {/* Content WYSIWYG */}

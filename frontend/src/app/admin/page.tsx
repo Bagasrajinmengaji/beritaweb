@@ -224,8 +224,13 @@ export default function AdminDashboardPage() {
 
   // ── 2b. Buka Customer Service Chat (Minta Hapus / Konsultasi Admin) ──
   const handleOpenCSChat = (item?: NewsItem) => {
-    setCsTargetNews(item || null);
-    setCsChatOpen(true);
+    window.dispatchEvent(
+      new CustomEvent('openCSChat', {
+        detail: {
+          targetNews: item ? { id: item.id, title: item.title, author: item.author } : undefined,
+        },
+      })
+    );
   };
 
   const handleRequestDeleteWA = (item: NewsItem) => {
@@ -938,14 +943,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
-
-      {/* ── MODAL: CUSTOMER SERVICE CHAT ── */}
-      <CustomerServiceChat
-        isOpen={csChatOpen}
-        onClose={() => setCsChatOpen(false)}
-        targetNews={csTargetNews}
-        currentUser={currentUser}
-      />
     </>
   );
 }
