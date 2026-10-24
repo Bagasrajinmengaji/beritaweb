@@ -26,3 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/news/{id}',                        [NewsController::class, 'update']); // Untuk multipart/form-data update dengan file
     Route::delete('/news/{id}',                      [NewsController::class, 'destroy']);
 });
+
+// ─── Customer Service & Chat Admin ─────────────────────────────────────────────
+Route::get('/cs/messages',          [\App\Http\Controllers\CustomerServiceController::class, 'index']);
+Route::post('/cs/messages',         [\App\Http\Controllers\CustomerServiceController::class, 'store']);
+Route::post('/cs/mark-as-read',     [\App\Http\Controllers\CustomerServiceController::class, 'markAsRead']);

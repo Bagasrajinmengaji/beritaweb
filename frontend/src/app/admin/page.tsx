@@ -22,6 +22,7 @@ import {
   User as UserIcon,
   MessageCircle,
   LogIn,
+  Bell,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { CustomerServiceChat } from '@/components/CustomerServiceChat';
@@ -158,6 +159,19 @@ export default function AdminDashboardPage() {
   const [csChatOpen, setCsChatOpen] = useState(false);
   const [csTargetNews, setCsTargetNews] = useState<NewsItem | null>(null);
 
+  // Notifikasi Kebutuhan User di Admin
+  const [unreadCSCount, setUnreadCSCount] = useState(0);
+  const [userRequests, setUserRequests] = useState<Array<{
+    id: number;
+    user_name: string;
+    message: string;
+    news_id?: number | null;
+    news_title?: string | null;
+    session_id?: string | null;
+    created_at: string;
+  }>>([]);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
 
   // ── 1. Fetch News ──
@@ -174,6 +188,29 @@ export default function AdminDashboardPage() {
       });
     } finally {
       setLoading(false);
+    }
+  }, [API]);
+
+  // ── 1b. Fetch Notifikasi Kebutuhan User untuk Admin ──
+  const fetchCSNotifications = useCallback(async () => {
+    const activeToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (!activeToken) return;
+
+    try {
+      const res = await fetch(`${API}/cs/messages`, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setUnreadCSCount(data.unread_count || 0);
+      if (Array.isArray(data.pending_requests)) {
+        setUserRequests(data.pending_requests);
+      }
+    } catch {
+      // ignore
     }
   }, [API]);
 
@@ -203,19 +240,23 @@ export default function AdminDashboardPage() {
 
       if (savedToken) {
         fetchNews();
+        fetchCSNotifications();
       } else {
         setLoading(false);
       }
     };
 
     syncToken();
+    const interval = setInterval(fetchCSNotifications, 4000);
+
     window.addEventListener('storage', syncToken);
     window.addEventListener('authChange', syncToken);
     return () => {
+      clearInterval(interval);
       window.removeEventListener('storage', syncToken);
       window.removeEventListener('authChange', syncToken);
     };
-  }, [fetchNews]);
+  }, [fetchNews, fetchCSNotifications]);
 
   // ── 2. Handle Login Google ──
   const handleLoginGoogle = () => {
@@ -223,7 +264,7 @@ export default function AdminDashboardPage() {
   };
 
   // ── 2b. Buka Customer Service Chat (Minta Hapus / Konsultasi Admin) ──
-  const handleOpenCSChat = (item?: NewsItem) => {
+  const handleOpenCSChat = (item?: { id: number; title: string; author?: string | null }) => {
     window.dispatchEvent(
       new CustomEvent('openCSChat', {
         detail: {
@@ -485,6 +526,97 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            {/* ── Notifikasi Kebutuhan User (Khusus Admin) ── */}
+            {currentUser?.role === 'admin' && (
+              <div className="relative">
+                <button
+                  id="btn-admin-notifications"
+                  type="button"
+                  onClick={() => setNotifDropdownOpen((prev) => !prev)}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-xs cursor-pointer"
+                  aria-label="Notifikasi Permohonan User"
+                  title="Notifikasi Permohonan & Kebutuhan User"
+                >
+                  <Bell size={18} />
+                  {unreadCSCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-sm animate-pulse">
+                      {unreadCSCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown Notifikasi Kebutuhan User */}
+                {notifDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-zinc-800 mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
+                          <Bell size={14} />
+                        </span>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                          Kebutuhan & Permohonan User
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300">
+                        {unreadCSCount} Baru
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                      {userRequests.length === 0 ? (
+                        <p className="text-xs text-stone-400 text-center py-6">
+                          Tidak ada permohonan baru dari user saat ini.
+                        </p>
+                      ) : (
+                        userRequests.map((req) => (
+                          <div
+                            key={req.id}
+                            className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/60 p-3 text-xs space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                                {req.user_name}
+                              </span>
+                              <span className="text-[10px] text-stone-400">
+                                {new Date(req.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+
+                            {req.news_title && (
+                              <p className="font-semibold text-orange-600 dark:text-orange-400 text-[11px] truncate">
+                                🗑️ Permohonan Hapus #{req.news_id}: {req.news_title}
+                              </p>
+                            )}
+
+                            <p className="text-stone-600 dark:text-stone-300 text-[11px] line-clamp-2">
+                              "{req.message}"
+                            </p>
+
+                            <div className="flex items-center justify-between pt-1">
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                ✓ Bot telah konfirmasi awal
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNotifDropdownOpen(false);
+                                  handleOpenCSChat({ id: req.news_id!, title: req.news_title || '' });
+                                }}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400"
+                              >
+                                <span>Balas Chat</span>
+                                <span>&rarr;</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               id="btn-open-cs-chat"
               type="button"

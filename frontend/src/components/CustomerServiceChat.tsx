@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MessageCircle,
   X,
@@ -8,6 +8,11 @@ import {
   ShieldCheck,
   Phone,
   Trash2,
+  Bell,
+  CheckCheck,
+  User as UserIcon,
+  RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 
 export interface NewsItemForChat {
@@ -16,43 +21,68 @@ export interface NewsItemForChat {
   author?: string | null;
 }
 
-interface ChatMessage {
-  id: string;
-  sender: 'user' | 'admin';
-  senderName: string;
-  text: string;
-  time: string;
-  isDeleteRequest?: boolean;
-  newsId?: number;
+interface DBMessage {
+  id: number;
+  user_id?: number | null;
+  session_id?: string | null;
+  user_name: string;
+  user_email?: string | null;
+  news_id?: number | null;
+  news_title?: string | null;
+  message: string;
+  sender: 'user' | 'admin' | 'bot';
+  is_read_by_admin: boolean;
+  is_read_by_user: boolean;
+  created_at: string;
 }
 
 interface CustomerServiceChatProps {
   isOpen?: boolean;
   onClose?: () => void;
   targetNews?: NewsItemForChat | null;
+  initialSessionId?: string | null;
 }
 
-const STORAGE_CHAT_KEY = 'portalberita_cs_chat_messages';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+
+function getOrCreateSessionId(userId?: number): string {
+  if (typeof window === 'undefined') return 'sess_default';
+  if (userId) return `usr_${userId}`;
+  let sid = localStorage.getItem('portalberita_cs_session_id');
+  if (!sid) {
+    sid = 'sess_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    localStorage.setItem('portalberita_cs_session_id', sid);
+  }
+  return sid;
+}
 
 export function CustomerServiceChat({
   isOpen: controlledIsOpen,
   onClose: controlledOnClose,
   targetNews: controlledTargetNews,
+  initialSessionId,
 }: CustomerServiceChatProps = {}) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [targetNews, setTargetNews] = useState<NewsItemForChat | null>(null);
-  const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string; role?: string | null } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id?: number; name?: string; email?: string; role?: string | null } | null>(null);
 
   const isControlled = controlledIsOpen !== undefined;
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string>('');
+  const [messages, setMessages] = useState<DBMessage[]>([]);
   const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Admin view state: jika user adalah admin, bisa melihat list sesi user
+  const [allSessions, setAllSessions] = useState<{ sessionId: string; userName: string; lastMessage: string; newsTitle?: string; unread: boolean; time: string }[]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WA ?? '6281234567890';
+  const isAdmin = currentUser?.role === 'admin';
 
   // Sinkronisasi data user dari localStorage
   useEffect(() => {
@@ -60,12 +90,15 @@ export function CustomerServiceChat({
       try {
         const saved = localStorage.getItem('user') || localStorage.getItem('auth_user');
         if (saved) {
-          setCurrentUser(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          setCurrentUser(parsed);
+          setActiveSessionId(initialSessionId || getOrCreateSessionId(parsed.id));
         } else {
           setCurrentUser(null);
+          setActiveSessionId(initialSessionId || getOrCreateSessionId());
         }
       } catch {
-        // ignore
+        setActiveSessionId(initialSessionId || getOrCreateSessionId());
       }
     };
 
@@ -76,19 +109,20 @@ export function CustomerServiceChat({
       window.removeEventListener('storage', syncUser);
       window.removeEventListener('authChange', syncUser);
     };
-  }, []);
+  }, [initialSessionId]);
 
-  const userName = currentUser?.name || 'Penulis Portal';
-
-  // Listener event global 'openCSChat' agar bisa dipicu dari tombol mana pun (misal tombol "Minta Hapus" di tabel)
+  // Listener event global 'openCSChat'
   useEffect(() => {
     const handleGlobalOpen = (e: Event) => {
-      const customEvt = e as CustomEvent<{ targetNews?: NewsItemForChat }>;
+      const customEvt = e as CustomEvent<{ targetNews?: NewsItemForChat; sessionId?: string }>;
       if (customEvt.detail?.targetNews) {
         setTargetNews(customEvt.detail.targetNews);
       }
+      if (customEvt.detail?.sessionId) {
+        setActiveSessionId(customEvt.detail.sessionId);
+      }
       if (isControlled && controlledOnClose) {
-        // if controlled, still set state
+        // controlled
       } else {
         setInternalIsOpen(true);
       }
@@ -100,7 +134,6 @@ export function CustomerServiceChat({
     };
   }, [isControlled, controlledOnClose]);
 
-  // Update targetNews saat prop controlled berubah
   useEffect(() => {
     if (controlledTargetNews !== undefined) {
       setTargetNews(controlledTargetNews);
@@ -115,142 +148,161 @@ export function CustomerServiceChat({
     }
   };
 
-  // Muat riwayat chat dari sessionStorage
-  useEffect(() => {
+  // ─── Fetch Messages from Backend API ──────────────────────────────────────────
+  const fetchMessages = useCallback(async () => {
+    if (!activeSessionId && !isAdmin) return;
     try {
-      const saved = sessionStorage.getItem(STORAGE_CHAT_KEY);
-      if (saved) {
-        setMessages(JSON.parse(saved));
-        return;
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const headers: Record<string, string> = { Accept: 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      let url = `${API}/cs/messages`;
+      if (activeSessionId) {
+        url += `?session_id=${encodeURIComponent(activeSessionId)}`;
+      }
+
+      const res = await fetch(url, { headers });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (Array.isArray(data.messages)) {
+        setMessages(data.messages);
+
+        // Jika admin, ekstrak daftar sesi unik dari pesan masuk
+        if (isAdmin) {
+          const sessionMap = new Map<string, { sessionId: string; userName: string; lastMessage: string; newsTitle?: string; unread: boolean; time: string }>();
+          data.messages.forEach((m: DBMessage) => {
+            const sid = m.session_id || 'general';
+            const existing = sessionMap.get(sid);
+            const isUnread = !m.is_read_by_admin && m.sender === 'user';
+            if (!existing || new Date(m.created_at) > new Date(existing.time)) {
+              sessionMap.set(sid, {
+                sessionId: sid,
+                userName: m.user_name || 'Pengguna',
+                lastMessage: m.message,
+                newsTitle: m.news_title || undefined,
+                unread: isUnread || Boolean(existing?.unread),
+                time: m.created_at,
+              });
+            }
+          });
+          setAllSessions(Array.from(sessionMap.values()));
+        }
       }
     } catch {
       // ignore
     }
+  }, [activeSessionId, isAdmin]);
 
-    // Sambutan awal otomatis dari CS Admin
-    const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const initialGreeting: ChatMessage = {
-      id: 'msg-welcome',
-      sender: 'admin',
-      senderName: 'Admin CS Redaksi',
-      text: 'Halo! Selamat datang di Customer Service Redaksi Portal Berita. Ada yang bisa kami bantu mengenai publikasi atau permohonan penghapusan artikel Anda?',
-      time: now,
-    };
-    setMessages([initialGreeting]);
-  }, []);
+  // Load awal dan polling tiap 3.5 detik saat chat terbuka
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const saveMessages = (msgs: ChatMessage[]) => {
-    setMessages(msgs);
-    try {
-      sessionStorage.setItem(STORAGE_CHAT_KEY, JSON.stringify(msgs));
-    } catch {
-      // ignore
-    }
-  };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3500);
+    return () => clearInterval(interval);
+  }, [isOpen, fetchMessages]);
 
+  // Scroll to bottom
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      inputRef.current?.focus();
     }
-  }, [messages, isOpen, isTyping]);
+  }, [messages, isOpen]);
 
-  // Otomatis kirim pesan template pengajuan hapus ketika dibuka dengan targetNews
+  // Kirim permohonan hapus otomatis saat dibuka dengan targetNews pertama kali
   useEffect(() => {
-    if (isOpen && targetNews) {
-      const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      const requestText = `Halo Admin CS, saya ${userName} ingin mengajukan penghapusan artikel berita dengan Judul: "${targetNews.title}" (ID: #${targetNews.id}). Mohon bantuannya untuk ditinjau dan dihapus. Terima kasih.`;
+    if (!isOpen || !targetNews || !activeSessionId || isAdmin) return;
 
-      setMessages((prev) => {
-        const alreadySent = prev.some(
-          (m) => m.isDeleteRequest && m.newsId === targetNews.id
-        );
-        if (alreadySent) return prev;
+    const autoSendDeleteRequest = async () => {
+      // Cek apakah di daftar pesan sudah ada permohonan untuk berita ini
+      const alreadyHas = messages.some((m) => m.news_id === targetNews.id && m.sender === 'user');
+      if (alreadyHas) return;
 
-        const userMsg: ChatMessage = {
-          id: `req-${Date.now()}`,
-          sender: 'user',
-          senderName: userName,
-          text: requestText,
-          time: now,
-          isDeleteRequest: true,
-          newsId: targetNews.id,
-        };
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const updated = [...prev, userMsg];
+      const text = `Halo Admin CS, saya ${currentUser?.name || 'Penulis'} ingin mengajukan permohonan penghapusan artikel berita: "${targetNews.title}" (ID: #${targetNews.id}). Mohon bantuannya untuk diproses. Terima kasih.`;
 
-        setIsTyping(true);
-        setTimeout(() => {
-          setIsTyping(false);
-          const replyTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-          const adminReply: ChatMessage = {
-            id: `reply-${Date.now()}`,
-            sender: 'admin',
-            senderName: 'Admin CS Redaksi',
-            text: `Baik kak ${userName}, permohonan penghapusan artikel "${targetNews.title}" (ID: #${targetNews.id}) telah kami terima. Tim redaksi akan memverifikasi dan memprosesnya dalam 1x24 jam.`,
-            time: replyTime,
-          };
-          saveMessages([...updated, adminReply]);
-        }, 1200);
-
-        saveMessages(updated);
-        return updated;
-      });
-    }
-  }, [isOpen, targetNews, userName]);
-
-  const handleSendMessage = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputText.trim()) return;
-
-    const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const userMsg: ChatMessage = {
-      id: `usr-${Date.now()}`,
-      sender: 'user',
-      senderName: userName,
-      text: inputText.trim(),
-      time: now,
+      try {
+        await fetch(`${API}/cs/messages`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            message: text,
+            news_id: targetNews.id,
+            news_title: targetNews.title,
+            session_id: activeSessionId,
+            user_name: currentUser?.name || 'Penulis Portal',
+            user_email: currentUser?.email || null,
+          }),
+        });
+        fetchMessages();
+      } catch {
+        // ignore
+      }
     };
 
-    const updated = [...messages, userMsg];
-    saveMessages(updated);
-    setInputText('');
+    autoSendDeleteRequest();
+  }, [isOpen, targetNews, activeSessionId, isAdmin, messages, currentUser, fetchMessages]);
 
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const replyTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      let replyText = 'Terima kasih telah menghubungi Customer Service. Tim redaksi kami sedang meninjau pesan Anda.';
+  // ─── Handle Send Message (User / Admin) ──────────────────────────────────────
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!inputText.trim() || isSending) return;
 
-      const lower = userMsg.text.toLowerCase();
-      if (lower.includes('hapus')) {
-        replyText = 'Permohonan penghapusan berita Anda telah kami catat. Redaktur kami akan segera mengevaluasi artikel tersebut.';
-      } else if (lower.includes('lama') || lower.includes('kapan') || lower.includes('waktu')) {
-        replyText = 'Proses verifikasi dan penghapusan artikel biasanya memakan waktu antara 10 menit hingga maksimal 1x24 jam pada hari kerja.';
+    setIsSending(true);
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const payload = {
+      message: inputText.trim(),
+      news_id: targetNews?.id || null,
+      news_title: targetNews?.title || null,
+      session_id: activeSessionId || getOrCreateSessionId(currentUser?.id),
+      user_name: isAdmin ? 'Admin Redaksi' : (currentUser?.name || 'Pengguna'),
+      user_email: currentUser?.email || null,
+      as_admin: isAdmin,
+    };
+
+    try {
+      const res = await fetch(`${API}/cs/messages`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setInputText('');
+        await fetchMessages();
       }
-
-      const adminReply: ChatMessage = {
-        id: `adm-${Date.now()}`,
-        sender: 'admin',
-        senderName: 'Admin CS Redaksi',
-        text: replyText,
-        time: replyTime,
-      };
-      saveMessages([...updated, adminReply]);
-    }, 1000);
+    } catch {
+      // ignore
+    } finally {
+      setIsSending(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
   };
 
   const handleOpenWhatsApp = () => {
     const defaultMsg = targetNews
-      ? `Halo Admin, saya ${userName} ingin mengajukan penghapusan berita dengan Judul: '${targetNews.title}' (ID: ${targetNews.id}). Mohon konfirmasinya.`
-      : `Halo Admin Redaksi Portal Berita, saya ${userName} membutuhkan bantuan terkait pengelolaan artikel berita.`;
+      ? `Halo Admin, saya ${currentUser?.name || 'Penulis'} ingin mengajukan penghapusan berita: '${targetNews.title}' (ID: ${targetNews.id}). Mohon konfirmasinya.`
+      : `Halo Admin Redaksi Portal Berita, saya ${currentUser?.name || 'Pengguna'} membutuhkan bantuan terkait artikel berita.`;
     const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(defaultMsg)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <>
-      {/* ── Floating Action Button (Sudut Kanan Bawah, Mengambang Seperti Aksesibilitas) ── */}
+      {/* ── Floating Action Button (Sudut Kanan Bawah) ── */}
       <button
         id="btn-floating-customer-service"
         type="button"
@@ -278,7 +330,7 @@ export function CustomerServiceChat({
           </span>
         </div>
         <span className="font-semibold text-xs tracking-wide">
-          Customer Service
+          {isAdmin ? 'CS Admin Support' : 'Customer Service'}
         </span>
       </button>
 
@@ -289,7 +341,7 @@ export function CustomerServiceChat({
           role="dialog"
           aria-modal="true"
           aria-labelledby="cs-chat-title"
-          className="fixed bottom-22 right-6 z-50 w-88 sm:w-96 h-[80vh] sm:h-[550px] max-h-[85vh] flex flex-col rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200"
+          className="fixed bottom-22 right-6 z-50 w-88 sm:w-105 h-[80vh] sm:h-[580px] max-h-[85vh] flex flex-col rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-950">
@@ -301,19 +353,33 @@ export function CustomerServiceChat({
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 id="cs-chat-title" className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    CS Redaksi
+                    {isAdmin ? 'Panel Chat CS (Admin Redaksi)' : 'Customer Service Redaksi'}
                   </h3>
                   <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
                     Online
                   </span>
                 </div>
                 <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                  Konsultasi & Permohonan Hapus Berita
+                  {isAdmin
+                    ? 'Anda dapat membalas pesan dan menindaklanjuti permohonan user'
+                    : 'Terhubung langsung dengan Admin & Redaktur'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsRefreshing(true);
+                  await fetchMessages();
+                  setIsRefreshing(false);
+                }}
+                title="Segarkan Pesan"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+              </button>
               <button
                 type="button"
                 onClick={handleOpenWhatsApp}
@@ -333,12 +399,12 @@ export function CustomerServiceChat({
             </div>
           </div>
 
-          {/* Banner Topik Berita jika ada target */}
+          {/* Banner Topik Berita / Target Permohonan */}
           {targetNews && (
             <div className="px-4 py-2 border-b border-orange-200 dark:border-orange-900/40 bg-orange-50/70 dark:bg-orange-950/30 flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 truncate pr-2">
                 <span className="font-bold text-orange-700 dark:text-orange-400 shrink-0">
-                  Topik:
+                  Topik Berita:
                 </span>
                 <span className="text-zinc-800 dark:text-zinc-200 truncate">
                   #{targetNews.id} &bull; {targetNews.title}
@@ -353,82 +419,109 @@ export function CustomerServiceChat({
 
           {/* Area Pesan Chat */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/40 dark:bg-zinc-950/30 text-xs sm:text-sm">
-            {messages.map((msg) => {
-              const isMe = msg.sender === 'user';
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-                >
-                  <span className="text-[10px] font-medium text-stone-400 dark:text-stone-500 mb-1 px-1">
-                    {msg.senderName} &bull; {msg.time}
-                  </span>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-xs leading-relaxed ${
-                      isMe
-                        ? 'bg-orange-600 text-white rounded-tr-none'
-                        : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border border-stone-200 dark:border-zinc-700 rounded-tl-none'
-                    }`}
-                  >
-                    {msg.isDeleteRequest && (
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-orange-200 mb-1 pb-1 border-b border-orange-400/40">
-                        <Trash2 size={12} />
-                        <span>Pengajuan Hapus Artikel #{msg.newsId}</span>
-                      </div>
-                    )}
-                    <p className="whitespace-pre-wrap">{msg.text}</p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {isTyping && (
-              <div className="flex items-center gap-1.5 text-stone-400 text-xs px-2 py-1">
-                <span className="h-2 w-2 rounded-full bg-orange-500 animate-bounce" />
-                <span className="h-2 w-2 rounded-full bg-orange-500 animate-bounce delay-100" />
-                <span className="h-2 w-2 rounded-full bg-orange-500 animate-bounce delay-200" />
-                <span className="text-[11px] font-medium text-stone-500 dark:text-stone-400 ml-1">
-                  Admin sedang mengetik...
-                </span>
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center text-stone-400 p-6">
+                <MessageCircle size={32} className="mb-2 text-stone-300 dark:text-zinc-700" />
+                <p className="font-medium text-xs">Belum ada percakapan</p>
+                <p className="text-[11px] mt-1 text-stone-400">
+                  Kirim pesan atau ajukan permohonan penghapusan artikel di form bawah.
+                </p>
               </div>
+            ) : (
+              messages.map((msg) => {
+                const isUserMessage = msg.sender === 'user';
+                const isBot = msg.sender === 'bot';
+                const isAdminMessage = msg.sender === 'admin';
+
+                // Posisi: jika Admin yang sedang melihat, maka pesan admin ada di kanan, pesan user ada di kiri.
+                // Jika User yang sedang melihat, maka pesan user ada di kanan, pesan admin/bot ada di kiri.
+                const isMe = isAdmin ? isAdminMessage : isUserMessage;
+
+                const timeStr = new Date(msg.created_at).toLocaleTimeString('id-ID', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                  >
+                    <div className="flex items-center gap-1 text-[10px] font-medium text-stone-400 dark:text-stone-500 mb-1 px-1">
+                      <span>{msg.user_name}</span>
+                      {isAdminMessage && (
+                        <span className="px-1 py-0.2 rounded bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 text-[9px] font-bold">
+                          Admin Redaksi
+                        </span>
+                      )}
+                      {isBot && (
+                        <span className="px-1 py-0.2 rounded bg-stone-200 text-stone-700 dark:bg-zinc-800 dark:text-stone-300 text-[9px] font-bold">
+                          Bot CS
+                        </span>
+                      )}
+                      <span>&bull; {timeStr}</span>
+                    </div>
+
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-xs leading-relaxed ${
+                        isMe
+                          ? 'bg-orange-600 text-white rounded-tr-none'
+                          : isBot
+                          ? 'bg-orange-50/80 dark:bg-orange-950/40 text-zinc-900 dark:text-zinc-100 border border-orange-200 dark:border-orange-900/50 rounded-tl-none'
+                          : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border border-stone-200 dark:border-zinc-700 rounded-tl-none'
+                      }`}
+                    >
+                      {msg.news_id && (
+                        <div className={`flex items-center gap-1.5 text-[11px] font-bold mb-1 pb-1 border-b ${isMe ? 'text-orange-200 border-orange-400/40' : 'text-orange-700 dark:text-orange-400 border-stone-200 dark:border-zinc-700'}`}>
+                          <Trash2 size={12} />
+                          <span>Artikel #{msg.news_id}: {msg.news_title || 'Terkait Berita'}</span>
+                        </div>
+                      )}
+                      <p className="whitespace-pre-wrap">{msg.message}</p>
+                    </div>
+                  </div>
+                );
+              })
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Buttons */}
-          <div className="px-3 py-1.5 border-t border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center gap-1.5 overflow-x-auto text-[11px] scrollbar-none">
-            <button
-              type="button"
-              onClick={() => {
-                setInputText('Berapa lama permohonan hapus diproses?');
-                inputRef.current?.focus();
-              }}
-              className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
-            >
-              ⏱ Estimasi Waktu?
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setInputText('Mohon konfirmasi status artikel saya');
-                inputRef.current?.focus();
-              }}
-              className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
-            >
-              📌 Cek Status Berita
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenWhatsApp}
-              className="shrink-0 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1"
-            >
-              <Phone size={10} />
-              WhatsApp
-            </button>
-          </div>
+          {/* Quick Buttons untuk Pengguna */}
+          {!isAdmin && (
+            <div className="px-3 py-1.5 border-t border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center gap-1.5 overflow-x-auto text-[11px] scrollbar-none">
+              <button
+                type="button"
+                onClick={() => {
+                  setInputText('Berapa lama permohonan hapus diproses oleh redaksi?');
+                  inputRef.current?.focus();
+                }}
+                className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+              >
+                ⏱ Estimasi Waktu?
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setInputText('Mohon konfirmasi status artikel berita saya');
+                  inputRef.current?.focus();
+                }}
+                className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+              >
+                📌 Cek Status Berita
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenWhatsApp}
+                className="shrink-0 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1"
+              >
+                <Phone size={10} />
+                WhatsApp
+              </button>
+            </div>
+          )}
 
-          {/* Input Form */}
+          {/* Input Form Balasan (Bisa dijawab oleh Admin maupun User) */}
           <form
             onSubmit={handleSendMessage}
             className="p-3 border-t border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-950 flex items-center gap-2"
@@ -438,14 +531,18 @@ export function CustomerServiceChat({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Tulis pesan untuk Admin CS..."
+              placeholder={
+                isAdmin
+                  ? 'Ketik balasan resmi dari Admin Redaksi...'
+                  : 'Tulis pesan untuk Admin CS...'
+              }
               className="flex-1 rounded-xl border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-stone-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
             />
             <button
               type="submit"
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || isSending}
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
-              title="Kirim Pesan"
+              title={isAdmin ? 'Kirim Balasan Admin' : 'Kirim Pesan'}
             >
               <Send size={15} />
             </button>
