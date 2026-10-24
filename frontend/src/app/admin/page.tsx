@@ -27,6 +27,7 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AuthUser {
+  id?: number;
   name: string;
   email: string;
   role?: string | null;
@@ -35,6 +36,7 @@ interface AuthUser {
 
 interface NewsItem {
   id: number;
+  user_id?: number | null;
   title: string;
   author?: string | null;
   content: string;
@@ -649,16 +651,17 @@ export default function AdminDashboardPage() {
                       {/* Aksi */}
                       <td className="px-5 py-4 text-right">
                         <div className="inline-flex items-center justify-end gap-1.5">
-                          {/* Edit Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(item)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 dark:border-zinc-800 text-stone-600 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-                            title="Edit Berita"
-                            aria-label={`Edit ${item.title}`}
-                          >
-                            <Edit3 size={14} aria-hidden="true" />
-                          </button>
+                          {/* Edit Button: Hanya tampil jika role admin ATAU user_id sama dengan user login */}
+                          {(currentUser?.role === 'admin' || (currentUser?.id != null && item.user_id === currentUser.id)) && (
+                            <Link
+                              href={`/admin/edit/${item.id}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 dark:border-zinc-800 text-stone-600 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                              title="Edit Berita"
+                              aria-label={`Edit ${item.title}`}
+                            >
+                              <Edit3 size={14} aria-hidden="true" />
+                            </Link>
+                          )}
 
                           {/* Tombol Hapus (Admin) ATAU Minta Hapus Chat Admin (User) */}
                           {currentUser?.role === 'admin' ? (

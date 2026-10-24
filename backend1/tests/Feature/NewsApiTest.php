@@ -144,23 +144,49 @@ test('admin user can update news title and content', function () {
     ]);
 });
 
-test('regular user cannot update news and receives 403 forbidden', function () {
-    $regularUser = User::factory()->create(['role' => 'user']);
-    Sanctum::actingAs($regularUser);
+test('author can update their own news even if role is user', function () {
+    $author = User::factory()->create(['role' => 'user']);
+    Sanctum::actingAs($author);
 
     $news = News::create([
-        'title'   => 'Berita Terkunci',
+        'user_id' => $author->id,
+        'title'   => 'Berita Milik Saya',
+        'content' => 'Konten awal',
+        'image'   => '/storage/news/dummy.webp',
+    ]);
+
+    $response = $this->putJson("/api/news/{$news->id}", [
+        'title'   => 'Berita Milik Saya (Updated)',
+        'content' => 'Konten berhasil diperbarui oleh pemilik artikel.',
+    ]);
+
+    $response->assertStatus(200)
+             ->assertJsonFragment([
+                 'message' => 'Berita berhasil diperbarui.',
+                 'title'   => 'Berita Milik Saya (Updated)',
+             ]);
+});
+
+test('regular user cannot update another user news and receives 403 forbidden', function () {
+    $otherUser = User::factory()->create(['role' => 'user']);
+    $currentUser = User::factory()->create(['role' => 'user']);
+
+    Sanctum::actingAs($currentUser);
+
+    $news = News::create([
+        'user_id' => $otherUser->id,
+        'title'   => 'Berita Milik Orang Lain',
         'content' => 'Konten asli',
         'image'   => '/storage/news/dummy.webp',
     ]);
 
     $response = $this->putJson("/api/news/{$news->id}", [
-        'title' => 'Coba Ubah oleh User Biasa',
+        'title' => 'Coba Bajak Berita Orang Lain',
     ]);
 
     $response->assertStatus(403)
              ->assertJson([
-                 'message' => 'Akses ditolak. Hanya Admin yang dapat menghapus/mengedit berita secara langsung.'
+                 'message' => 'Anda hanya dapat mengedit berita buatan sendiri.'
              ]);
 });
 

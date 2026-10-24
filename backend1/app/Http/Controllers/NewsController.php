@@ -63,6 +63,7 @@ class NewsController extends Controller
         }
 
         $news = News::create([
+            'user_id' => auth()->id(),
             'title'   => $request->title,
             'author'  => $authorName,
             'content' => $request->content,
@@ -91,13 +92,14 @@ class NewsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (auth()->user()->role !== 'admin') {
+        $news = News::findOrFail($id);
+
+        // Otorisasi: Hanya Admin atau Pemilik Artikel yang boleh mengedit
+        if (auth()->user()->role !== 'admin' && $news->user_id !== auth()->id()) {
             return response()->json([
-                'message' => 'Akses ditolak. Hanya Admin yang dapat menghapus/mengedit berita secara langsung.'
+                'message' => 'Anda hanya dapat mengedit berita buatan sendiri.'
             ], 403);
         }
-
-        $news = News::findOrFail($id);
 
         $request->validate([
             'title'   => 'sometimes|required|string|max:255',

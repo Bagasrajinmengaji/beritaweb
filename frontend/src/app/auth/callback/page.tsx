@@ -13,16 +13,21 @@ function CallbackHandler() {
     const paramRole = searchParams.get('role');
     const paramName = searchParams.get('name');
     const paramEmail = searchParams.get('email');
+    const paramId = searchParams.get('id');
 
     if (token) {
       localStorage.setItem('auth_token', token);
       localStorage.setItem('token', token);
 
-      let user: { name: string; email: string; role: string; avatar?: string | null } = {
+      let user: { id?: number; name: string; email: string; role: string; avatar?: string | null } = {
         name: paramName || 'Pengguna',
         email: paramEmail || 'user@portalberita.com',
         role: paramRole || 'user',
       };
+
+      if (paramId) {
+        user.id = Number(paramId);
+      }
 
       if (userRaw) {
         try {

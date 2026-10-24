@@ -13,7 +13,7 @@ import {
   Undo,
   Redo,
 } from 'lucide-react';
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 
 // ─── Toolbar Button ───────────────────────────────────────────────────────────
 
@@ -103,6 +103,13 @@ export function RichTextEditor({
       onChange(isEmpty ? '' : html);
     },
   });
+
+  // Sinkronisasi konten saat data async selesai dimuat
+  useEffect(() => {
+    if (editor && content && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return (

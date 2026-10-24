@@ -47,6 +47,7 @@ class AuthController extends Controller
 
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         $userData    = urlencode(json_encode([
+            'id'     => $user->id,
             'name'   => $user->name,
             'email'  => $user->email,
             'role'   => $user->role,
