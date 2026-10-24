@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, User, AlertTriangle } from 'lucide-react';
 interface NewsItem {
   id: number;
   title: string;
+  author?: string | null;
   content: string;
   image: string;
   created_at: string;
@@ -153,7 +154,7 @@ export default function NewsDetailPage({
           <div className="flex flex-wrap items-center gap-4 text-sm text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)] mb-8 pb-6 border-b border-black/6 dark:border-white/6">
             <span className="flex items-center gap-1.5">
               <User size={14} aria-hidden="true" />
-              <span>Redaksi Portal Berita</span>
+              <span>{news.author ?? 'Redaksi Portal Berita'}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar size={14} aria-hidden="true" />

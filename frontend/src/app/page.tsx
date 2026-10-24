@@ -11,6 +11,7 @@ import { Calendar, User, ArrowRight, BookOpen, TrendingUp } from 'lucide-react';
 interface NewsItem {
   id: number;
   title: string;
+  author?: string | null;
   content: string;
   image: string;
   created_at: string;
@@ -125,7 +126,7 @@ function HeroCard({ news }: { news: NewsItem }) {
         <div className="flex items-center gap-4 text-white/60 text-sm">
           <span className="flex items-center gap-1.5">
             <User size={13} aria-hidden="true" />
-            Redaksi
+            {news.author ?? 'Redaksi'}
           </span>
           <span className="flex items-center gap-1.5">
             <Calendar size={13} aria-hidden="true" />
@@ -191,7 +192,7 @@ function NewsCard({ news, index }: { news: NewsItem; index: number }) {
         <div className="flex items-center justify-between text-[oklch(0.58_0.007_250)] dark:text-[oklch(0.55_0.006_250)] text-xs pt-3 border-t border-black/5 dark:border-white/5">
           <span className="flex items-center gap-1">
             <User size={11} aria-hidden="true" />
-            Redaksi
+            {news.author ?? 'Redaksi'}
           </span>
           <time dateTime={news.created_at} className="flex items-center gap-1">
             <Calendar size={11} aria-hidden="true" />

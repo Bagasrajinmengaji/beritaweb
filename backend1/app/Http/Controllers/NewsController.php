@@ -26,9 +26,14 @@ class NewsController extends Controller
         // 1. Validasi input
         $request->validate([
             'title'   => 'required|string',
+            'author'  => 'nullable|string|max:255',
             'content' => 'required|string',
             'image'   => 'required|image|mimes:jpeg,jpg,png,webp|max:5048',
         ]);
+
+        // Ambil nama author dari user yang login, atau dari input jika ada
+        $authorName = $request->input('author')
+            ?: (auth()->check() ? auth()->user()->name : 'Redaksi');
 
         $file = $request->file('image');
 
@@ -63,6 +68,7 @@ class NewsController extends Controller
         // 4. Simpan path relatif gambar ke database MySQL (Storage::url(...))
         $news = News::create([
             'title'   => $request->title,
+            'author'  => $authorName,
             'content' => $request->content,
             'image'   => Storage::url($relativePath),
         ]);
@@ -92,11 +98,12 @@ class NewsController extends Controller
 
         $request->validate([
             'title'   => 'sometimes|required|string',
+            'author'  => 'nullable|string|max:255',
             'content' => 'sometimes|required|string',
             'image'   => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5048',
         ]);
 
-        $data = $request->only(['title', 'content']);
+        $data = $request->only(['title', 'author', 'content']);
 
         if ($request->hasFile('image')) {
             $this->deletePhysicalImage($news->image);
