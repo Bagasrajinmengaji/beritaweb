@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LogOut, PenLine, LayoutDashboard } from 'lucide-react';
+import { Sun, Moon, LogOut, PenLine, LayoutDashboard, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
@@ -11,6 +11,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 interface AuthUser {
   name: string;
+  username?: string | null;
   email: string;
   role?: string | null;
   avatar?: string | null;
@@ -90,7 +91,7 @@ export function Navbar() {
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
   const handleLogin = () => {
-    window.location.href = `${API}/auth/google`;
+    router.push('/login');
   };
 
   const handleLogout = async () => {
@@ -212,15 +213,14 @@ export function Navbar() {
 
             {/* ── Belum Login ── */}
             {mounted && !user && (
-              <button
-                id="btn-login-google"
-                onClick={handleLogin}
-                className="inline-flex items-center gap-2 rounded-lg border border-stone-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:border-orange-500/50 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
+              <Link
+                id="btn-login"
+                href="/login"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/40 px-3.5 py-2 text-sm font-semibold text-orange-700 dark:text-orange-300 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
               >
-                <GoogleIcon size={17} />
-                <span className="hidden sm:inline">Masuk dengan Google</span>
-                <span className="sm:hidden">Masuk</span>
-              </button>
+                <LogIn size={15} aria-hidden="true" />
+                <span>Masuk</span>
+              </Link>
             )}
 
             {/* ── Sudah Login ── */}

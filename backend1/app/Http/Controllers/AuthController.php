@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
@@ -47,14 +48,56 @@ class AuthController extends Controller
 
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         $userData    = urlencode(json_encode([
-            'id'     => $user->id,
-            'name'   => $user->name,
-            'email'  => $user->email,
-            'role'   => $user->role,
-            'avatar' => $user->avatar,
+            'id'       => $user->id,
+            'name'     => $user->name,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'role'     => $user->role,
+            'avatar'   => $user->avatar,
         ]));
 
         return redirect($frontendUrl . '/auth/callback?token=' . $token . '&user=' . $userData);
+    }
+
+    /**
+     * Login menggunakan username dan password.
+     */
+    public function login(Request $request)
+    {
+        $validated = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        // Cari user berdasarkan username ATAU email
+        $user = User::where('username', $validated['username'])
+            ->orWhere('email', $validated['username'])
+            ->first();
+
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'message' => 'Username atau password salah.',
+            ], 401);
+        }
+
+        // Hapus token auth-token lama jika ada
+        $user->tokens()->where('name', 'auth-token')->delete();
+
+        // Buat Sanctum token baru
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login berhasil.',
+            'token'   => $token,
+            'user'    => [
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'username' => $user->username,
+                'email'    => $user->email,
+                'role'     => $user->role,
+                'avatar'   => $user->avatar,
+            ],
+        ]);
     }
 
     /**
@@ -66,6 +109,7 @@ class AuthController extends Controller
         return response()->json([
             'id'         => $user->id,
             'name'       => $user->name,
+            'username'   => $user->username,
             'email'      => $user->email,
             'role'       => $user->role,
             'avatar'     => $user->avatar,

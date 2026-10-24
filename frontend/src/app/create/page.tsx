@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle, AlertTriangle, X, ShieldAlert, LogIn } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
 // ─── Google Icon SVG ──────────────────────────────────────────────────────────
@@ -273,10 +273,18 @@ export default function CreatePage() {
           </h1>
 
           <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
-            Anda harus login dengan Google untuk menulis dan menerbitkan berita di Portal Berita.
+            Anda harus masuk ke akun untuk menulis dan menerbitkan berita di Portal Berita.
           </p>
 
           <div className="flex flex-col gap-3">
+            <Link
+              href="/login?redirect=/create"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-3 text-sm font-semibold shadow-sm transition-all active:scale-[0.98]"
+            >
+              <LogIn size={17} />
+              <span>Masuk dengan Username / Password</span>
+            </Link>
+
             <button
               onClick={handleLoginGoogle}
               className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:border-orange-500/50 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"

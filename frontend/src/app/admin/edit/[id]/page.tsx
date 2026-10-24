@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   Save,
   Image as ImageIcon,
+  LogIn,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
@@ -308,14 +309,15 @@ export default function EditNewsPage() {
             Akses Ditolak
           </h1>
           <p className="text-sm text-stone-600 dark:text-stone-400 mb-6">
-            Anda harus masuk untuk mengedit artikel berita.
+            Anda harus masuk ke akun untuk mengedit artikel berita.
           </p>
-          <button
-            onClick={() => (window.location.href = `${API}/auth/google`)}
+          <Link
+            href={`/login?redirect=/admin/edit/${id}`}
             className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 text-white font-semibold py-2.5 hover:bg-orange-700 transition-colors shadow-sm"
           >
-            Login dengan Google
-          </button>
+            <LogIn size={16} />
+            <span>Masuk ke Akun</span>
+          </Link>
         </div>
       </main>
     );

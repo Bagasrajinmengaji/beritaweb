@@ -21,6 +21,7 @@ import {
   Calendar,
   User as UserIcon,
   MessageCircle,
+  LogIn,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
@@ -29,6 +30,7 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 interface AuthUser {
   id?: number;
   name: string;
+  username?: string | null;
   email: string;
   role?: string | null;
   avatar?: string | null;
@@ -377,16 +379,24 @@ export default function AdminDashboardPage() {
           </h1>
 
           <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
-            Halaman Dashboard Admin hanya dapat diakses oleh redaktur yang telah masuk melalui Google SSO.
+            Halaman Dashboard Admin hanya dapat diakses oleh redaktur yang telah terautentikasi.
           </p>
 
           <div className="flex flex-col gap-3">
+            <Link
+              href="/login?redirect=/admin"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-3 text-sm font-semibold shadow-sm transition-all active:scale-[0.98]"
+            >
+              <LogIn size={17} />
+              <span>Masuk dengan Username / Password</span>
+            </Link>
+
             <button
               onClick={handleLoginGoogle}
               className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:border-orange-500/50 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
             >
               <GoogleIcon size={18} />
-              <span>Login dengan Google</span>
+              <span>Masuk dengan Google</span>
             </button>
 
             <Link

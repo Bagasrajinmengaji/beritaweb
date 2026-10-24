@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
 
-// ─── Auth — Google SSO ────────────────────────────────────────────────────────
+// ─── Auth — Public ─────────────────────────────────────────────────────────────
+Route::post('/login',               [AuthController::class, 'login']);
 Route::get('/auth/google',          [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 

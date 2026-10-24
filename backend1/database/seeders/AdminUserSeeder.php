@@ -12,13 +12,27 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Set user penguji utama sebagai admin
-        User::updateOrCreate(
-            ['email' => '1202407009@students.itspku.ac.id'],
-            [
-                'name' => 'Bagas Pramono',
-                'role' => 'admin',
-            ]
-        );
+        // Set user penguji utama sebagai admin dengan username dan password
+        $admin = User::where('email', '1202407009@students.itspku.ac.id')
+            ->orWhere('username', 'bagasganteng')
+            ->first();
+
+        if ($admin) {
+            $admin->update([
+                'name'     => 'Bagas Pramono',
+                'username' => 'bagasganteng',
+                'email'    => '1202407009@students.itspku.ac.id',
+                'password' => '987654321',
+                'role'     => 'admin',
+            ]);
+        } else {
+            User::create([
+                'name'     => 'Bagas Pramono',
+                'username' => 'bagasganteng',
+                'email'    => '1202407009@students.itspku.ac.id',
+                'password' => '987654321',
+                'role'     => 'admin',
+            ]);
+        }
     }
 }
