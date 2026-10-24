@@ -1,26 +1,153 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Design Tokens (Tailwind v4 CSS-first config) ─── */
+@theme {
+  /* Brand palette — warm editorial tone */
+  --color-brand-50:  oklch(0.97 0.02 240);
+  --color-brand-100: oklch(0.93 0.04 240);
+  --color-brand-200: oklch(0.86 0.07 240);
+  --color-brand-300: oklch(0.76 0.11 240);
+  --color-brand-400: oklch(0.63 0.15 240);
+  --color-brand-500: oklch(0.52 0.18 240);
+  --color-brand-600: oklch(0.44 0.20 240);
+  --color-brand-700: oklch(0.37 0.18 240);
+  --color-brand-800: oklch(0.30 0.14 240);
+  --color-brand-900: oklch(0.23 0.10 240);
+
+  /* Accent — warm amber for CTAs & highlights */
+  --color-accent-400: oklch(0.85 0.16 80);
+  --color-accent-500: oklch(0.77 0.18 78);
+  --color-accent-600: oklch(0.68 0.18 76);
+
+  /* Surface neutrals */
+  --color-surface-50:  oklch(0.985 0.002 250);
+  --color-surface-100: oklch(0.96  0.004 250);
+  --color-surface-800: oklch(0.18  0.008 250);
+  --color-surface-900: oklch(0.13  0.006 250);
+  --color-surface-950: oklch(0.09  0.005 250);
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+
+  /* Radius scale */
+  --radius-card: 0.75rem;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ─── Base ─── */
+*, *::before, *::after { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-surface-50);
+  color: oklch(0.18 0.008 250);
+  min-height: 100dvh;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
+
+.dark body {
+  background-color: var(--color-surface-950);
+  color: oklch(0.92 0.004 250);
+}
+
+/* ─── Dark mode via class ─── */
+@variant dark (&:where(.dark, .dark *));
+
+/* ─── Focus ring — keyboard only ─── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Line clamp utilities ─── */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Skeleton pulse ─── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.skeleton {
+  background-color: oklch(0.88 0.004 250);
+  border-radius: 0.375rem;
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+.dark .skeleton {
+  background-color: oklch(0.25 0.006 250);
+}
+
+/* ─── Card hover lift ─── */
+.card-lift {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+.card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px -8px oklch(0.18 0.008 250 / 0.14);
+}
+.dark .card-lift:hover {
+  box-shadow: 0 12px 32px -8px oklch(0 0 0 / 0.4);
+}
+
+/* ─── Image zoom on card hover ─── */
+.img-zoom {
+  transition: transform 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.group:hover .img-zoom {
+  transform: scale(1.04);
+}
+
+/* ─── Toast notification ─── */
+@keyframes slide-in-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+@keyframes fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.toast-enter { animation: slide-in-up 300ms ease forwards; }
+.toast-exit  { animation: fade-out 300ms ease 2.5s forwards; }
+
+/* ─── Spinner ─── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+  display: inline-block;
+}
+
+/* ─── Prose overrides for dark ─── */
+.dark .prose { color: oklch(0.88 0.004 250); }
+.dark .prose strong { color: oklch(0.96 0.002 250); }
+.dark .prose h1, .dark .prose h2, .dark .prose h3 { color: oklch(0.96 0.002 250); }
+.dark .prose a { color: var(--color-brand-300); }
