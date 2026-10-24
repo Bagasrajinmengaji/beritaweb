@@ -63,7 +63,7 @@ body {
 }
 
 /* ─── Dark mode via class ─── */
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ─── Focus ring — keyboard only ─── */
 :focus-visible {

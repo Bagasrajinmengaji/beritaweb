@@ -42,13 +42,13 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-dvh flex flex-col bg-[oklch(0.985_0.002_250)] dark:bg-[oklch(0.09_0.005_250)] text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] antialiased">
+      <body className="min-h-dvh flex flex-col bg-surface-50 dark:bg-[oklch(0.09_0.005_250)] text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] antialiased">
         <ThemeProvider>
           <Navbar />
           <div className="flex-1">
             {children}
           </div>
-          <footer className="mt-auto border-t border-black/[0.06] dark:border-white/[0.06] py-8 text-center text-sm text-[oklch(0.55_0.008_250)] dark:text-[oklch(0.55_0.006_250)]">
+          <footer className="mt-auto border-t border-black/6 dark:border-white/6 py-8 text-center text-sm text-[oklch(0.55_0.008_250)] dark:text-[oklch(0.55_0.006_250)]">
             <p>© {new Date().getFullYear()} Portal Berita. Seluruh hak cipta dilindungi.</p>
           </footer>
         </ThemeProvider>

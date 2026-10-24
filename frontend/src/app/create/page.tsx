@@ -55,7 +55,7 @@ function ImagePreview({
 }) {
   const src = URL.createObjectURL(file);
   return (
-    <div className="relative mt-3 rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08]">
+    <div className="relative mt-3 rounded-xl overflow-hidden border border-black/8 dark:border-white/8">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -168,7 +168,7 @@ export default function CreatePage() {
       'w-full rounded-lg border px-4 py-2.5 text-sm bg-white dark:bg-[oklch(0.16_0.007_250)] text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] placeholder:text-[oklch(0.65_0.006_250)] dark:placeholder:text-[oklch(0.5_0.005_250)] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[oklch(0.52_0.18_240)] focus:border-transparent',
       fieldErrors[field]
         ? 'border-red-400 dark:border-red-700'
-        : 'border-black/[0.12] dark:border-white/[0.12]',
+        : 'border-black/12 dark:border-white/12',
     ].join(' ');
 
   return (
@@ -186,7 +186,7 @@ export default function CreatePage() {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)] hover:text-[oklch(0.37_0.18_240)] dark:hover:text-[oklch(0.86_0.07_240)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] rounded-lg px-0.5"
+            className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg px-0.5"
             aria-label="Kembali ke halaman utama"
           >
             <ArrowLeft size={16} aria-hidden="true" />
@@ -195,7 +195,7 @@ export default function CreatePage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-black/[0.06] dark:border-white/[0.06] bg-[oklch(0.985_0.002_250)] dark:bg-[oklch(0.13_0.006_250)] shadow-sm px-6 py-8 sm:px-8">
+        <div className="rounded-2xl border border-black/6 dark:border-white/6 bg-surface-50 dark:bg-[oklch(0.13_0.006_250)] shadow-sm px-6 py-8 sm:px-8">
           <div className="mb-7">
             <h1
               className="text-2xl font-bold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)]"
@@ -257,7 +257,7 @@ export default function CreatePage() {
                   if (fieldErrors.content) setFieldErrors((p) => ({ ...p, content: '' }));
                 }}
                 placeholder="Tuliskan isi berita secara lengkap dan akurat…"
-                className={`${inputClass('content')} resize-y min-h-[160px]`}
+                className={`${inputClass('content')} resize-y min-h-40`}
                 aria-required="true"
                 aria-describedby={fieldErrors.content ? 'content-error' : undefined}
                 disabled={isSubmitting}
@@ -294,11 +294,11 @@ export default function CreatePage() {
                 }}
                 className={[
                   'cursor-pointer flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 transition-colors duration-150',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)]',
-                  isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:border-[oklch(0.52_0.18_240)]/50 hover:bg-[oklch(0.52_0.18_240)]/[0.02]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                  isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:border-brand-500/50 hover:bg-brand-500/2',
                   fieldErrors.image
                     ? 'border-red-400 dark:border-red-700 bg-red-50/50 dark:bg-red-950/10'
-                    : 'border-black/[0.12] dark:border-white/[0.12] bg-black/[0.01] dark:bg-white/[0.01]',
+                    : 'border-black/12 dark:border-white/12 bg-black/1 dark:bg-white/1',
                 ].join(' ')}
               >
                 <Upload
@@ -355,7 +355,7 @@ export default function CreatePage() {
               type="submit"
               disabled={isSubmitting}
               aria-disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2.5 rounded-lg bg-[oklch(0.52_0.18_240)] hover:bg-[oklch(0.44_0.20_240)] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 text-white font-semibold text-sm py-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.985_0.002_250)] dark:focus-visible:ring-offset-[oklch(0.13_0.006_250)] shadow-sm"
+              className="w-full flex items-center justify-center gap-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 text-white font-semibold text-sm py-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 dark:focus-visible:ring-offset-[oklch(0.13_0.006_250)] shadow-sm"
             >
               {isSubmitting ? (
                 <>

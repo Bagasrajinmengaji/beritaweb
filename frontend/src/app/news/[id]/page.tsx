@@ -46,7 +46,7 @@ function DetailSkeleton() {
         <div className="skeleton h-4 w-28 rounded" />
         <div className="skeleton h-4 w-36 rounded" />
       </div>
-      <div className="skeleton aspect-[16/9] w-full rounded-2xl" />
+      <div className="skeleton aspect-video w-full rounded-2xl" />
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="skeleton h-4 rounded" style={{ width: `${85 + Math.random() * 15}%` }} />
@@ -98,7 +98,7 @@ export default function NewsDetailPage({
       <div className="mb-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)] hover:text-[oklch(0.37_0.18_240)] dark:hover:text-[oklch(0.86_0.07_240)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] rounded-lg px-0.5"
+          className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg px-0.5"
           aria-label="Kembali ke halaman utama"
         >
           <ArrowLeft size={16} aria-hidden="true" />
@@ -124,7 +124,7 @@ export default function NewsDetailPage({
           <p className="text-sm text-red-600 dark:text-red-500 mb-4">{error}</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)] underline underline-offset-2 hover:no-underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 underline underline-offset-2 hover:no-underline"
           >
             <ArrowLeft size={14} aria-hidden="true" />
             Kembali ke Beranda
@@ -136,7 +136,7 @@ export default function NewsDetailPage({
       {!loading && !error && news && (
         <article className="max-w-3xl mx-auto" aria-labelledby="article-title">
           {/* Category badge */}
-          <span className="inline-flex items-center rounded-full bg-[oklch(0.52_0.18_240)]/10 dark:bg-[oklch(0.52_0.18_240)]/20 px-3 py-1 text-xs font-semibold text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)] tracking-wide uppercase mb-5">
+          <span className="inline-flex items-center rounded-full bg-brand-500/10 dark:bg-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-600 dark:text-brand-300 tracking-wide uppercase mb-5">
             Berita
           </span>
 
@@ -150,7 +150,7 @@ export default function NewsDetailPage({
           </h1>
 
           {/* Meta */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)] mb-8 pb-6 border-b border-black/[0.06] dark:border-white/[0.06]">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)] mb-8 pb-6 border-b border-black/6 dark:border-white/6">
             <span className="flex items-center gap-1.5">
               <User size={14} aria-hidden="true" />
               <span>Redaksi Portal Berita</span>
@@ -169,7 +169,7 @@ export default function NewsDetailPage({
               width={1200}
               height={630}
               priority
-              className="w-full object-cover max-h-[500px]"
+              className="w-full object-cover max-h-125"
               unoptimized={getImageSrc(news.image).startsWith('http://127')}
             />
           </div>

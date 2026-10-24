@@ -24,7 +24,7 @@ export function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full border-b border-black/[0.06] dark:border-white/[0.06] bg-[oklch(0.985_0.002_250)]/90 dark:bg-[oklch(0.09_0.005_250)]/90 backdrop-blur-md"
+      className="sticky top-0 z-50 w-full border-b border-black/6 dark:border-white/6 bg-surface-50/90 dark:bg-[oklch(0.09_0.005_250)]/90 backdrop-blur-md"
       role="banner"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -32,11 +32,11 @@ export function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="shrink-0 flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] rounded-lg"
+            className="shrink-0 flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
             aria-label="Portal Berita — Halaman Utama"
           >
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-[oklch(0.52_0.18_240)] text-white font-bold text-sm select-none"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white font-bold text-sm select-none"
               aria-hidden="true"
             >
               PB
@@ -56,10 +56,10 @@ export function Navbar() {
                   href={href}
                   className={[
                     'hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)]',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
                     isActive
-                      ? 'bg-[oklch(0.52_0.18_240)]/10 text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)]'
-                      : 'text-[oklch(0.37_0.18_240)/0.75] hover:text-[oklch(0.37_0.18_240)] dark:text-[oklch(0.76_0.11_240)/0.65] dark:hover:text-[oklch(0.86_0.07_240)] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]',
+                      ? 'bg-brand-500/10 text-brand-600 dark:text-brand-300'
+                      : 'text-brand-700/75 hover:text-brand-700 dark:text-brand-300/65 dark:hover:text-brand-200 hover:bg-black/4 dark:hover:bg-white/6',
                   ].join(' ')}
                   aria-current={isActive ? 'page' : undefined}
                 >
@@ -71,7 +71,7 @@ export function Navbar() {
             {/* Dark mode toggle */}
             <button
               onClick={toggleTheme}
-              className="ml-1 flex h-9 w-9 items-center justify-center rounded-lg text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)]"
+              className="ml-1 flex h-9 w-9 items-center justify-center rounded-lg text-brand-600 dark:text-brand-300 hover:bg-black/6 dark:hover:bg-white/8 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               aria-label={isDark ? 'Beralih ke mode terang' : 'Beralih ke mode gelap'}
               title={isDark ? 'Mode terang' : 'Mode gelap'}
             >
@@ -80,14 +80,14 @@ export function Navbar() {
                   ? <Sun size={18} aria-hidden="true" />
                   : <Moon size={18} aria-hidden="true" />
               ) : (
-                <span className="h-[18px] w-[18px] rounded-full skeleton" aria-hidden="true" />
+                <span className="h-4.5 w-4.5 rounded-full skeleton" aria-hidden="true" />
               )}
             </button>
 
             {/* CTA */}
             <Link
               href="/create"
-              className="ml-2 inline-flex items-center gap-1.5 rounded-lg bg-[oklch(0.52_0.18_240)] px-4 py-2 text-sm font-semibold text-white hover:bg-[oklch(0.44_0.20_240)] active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.985_0.002_250)] dark:focus-visible:ring-offset-[oklch(0.09_0.005_250)] shadow-sm"
+              className="ml-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 dark:focus-visible:ring-offset-[oklch(0.09_0.005_250)] shadow-sm"
             >
               <span aria-hidden="true" className="text-base leading-none">+</span>
               <span>Tulis Berita</span>

@@ -44,7 +44,7 @@ function getImageSrc(imagePath: string): string {
 function HeroSkeleton() {
   return (
     <div className="rounded-2xl overflow-hidden bg-[oklch(0.96_0.004_250)] dark:bg-[oklch(0.18_0.008_250)] animate-pulse">
-      <div className="aspect-[16/9] sm:aspect-[21/9] skeleton" />
+      <div className="aspect-video sm:aspect-21/9 skeleton" />
       <div className="p-6 sm:p-8 space-y-4">
         <div className="skeleton h-5 w-20 rounded-full" />
         <div className="skeleton h-9 w-4/5 rounded" />
@@ -62,8 +62,8 @@ function HeroSkeleton() {
 
 function CardSkeleton() {
   return (
-    <div className="rounded-xl overflow-hidden bg-[oklch(0.985_0.002_250)] dark:bg-[oklch(0.13_0.006_250)] border border-black/[0.05] dark:border-white/[0.05] animate-pulse">
-      <div className="aspect-[16/10] skeleton" />
+    <div className="rounded-xl overflow-hidden bg-surface-50 dark:bg-[oklch(0.13_0.006_250)] border border-black/5 dark:border-white/5 animate-pulse">
+      <div className="aspect-16/10 skeleton" />
       <div className="p-4 space-y-3">
         <div className="skeleton h-4 w-16 rounded-full" />
         <div className="skeleton h-5 w-full rounded" />
@@ -84,7 +84,7 @@ function HeroCard({ news }: { news: NewsItem }) {
   return (
     <article className="group relative rounded-2xl overflow-hidden bg-[oklch(0.13_0.006_250)] shadow-xl">
       {/* Image */}
-      <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden">
+      <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden">
         <Image
           src={src}
           alt={news.title}
@@ -95,13 +95,13 @@ function HeroCard({ news }: { news: NewsItem }) {
           unoptimized={src.startsWith('http://127')}
         />
         {/* overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
       </div>
 
       {/* Content overlaid on image */}
       <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10">
         {/* Category badge */}
-        <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-[oklch(0.52_0.18_240)]/90 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+        <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500/90 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
           <TrendingUp size={12} aria-hidden="true" />
           Berita Utama
         </span>
@@ -152,9 +152,9 @@ function NewsCard({ news, index }: { news: NewsItem; index: number }) {
   const src = getImageSrc(news.image);
 
   return (
-    <article className="group card-lift rounded-xl overflow-hidden bg-[oklch(0.985_0.002_250)] dark:bg-[oklch(0.13_0.006_250)] border border-black/[0.05] dark:border-white/[0.05] flex flex-col">
+    <article className="group card-lift rounded-xl overflow-hidden bg-surface-50 dark:bg-[oklch(0.13_0.006_250)] border border-black/5 dark:border-white/5 flex flex-col">
       {/* Image */}
-      <div className="relative aspect-[16/10] overflow-hidden">
+      <div className="relative aspect-16/10 overflow-hidden">
         <Image
           src={src}
           alt={news.title}
@@ -168,7 +168,7 @@ function NewsCard({ news, index }: { news: NewsItem; index: number }) {
 
       <div className="flex flex-col flex-1 p-5">
         {/* Category badge */}
-        <span className="mb-2.5 inline-flex w-fit items-center rounded-full bg-[oklch(0.52_0.18_240)]/10 dark:bg-[oklch(0.52_0.18_240)]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[oklch(0.44_0.20_240)] dark:text-[oklch(0.76_0.11_240)] tracking-wide uppercase">
+        <span className="mb-2.5 inline-flex w-fit items-center rounded-full bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-brand-600 dark:text-brand-300 tracking-wide uppercase">
           Berita
         </span>
 
@@ -176,7 +176,7 @@ function NewsCard({ news, index }: { news: NewsItem; index: number }) {
         <h3 className="text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] font-semibold text-base leading-snug line-clamp-2 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
           <Link
             href={`/news/${news.id}`}
-            className="hover:text-[oklch(0.44_0.20_240)] dark:hover:text-[oklch(0.76_0.11_240)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] rounded"
+            className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
           >
             {news.title}
           </Link>
@@ -188,7 +188,7 @@ function NewsCard({ news, index }: { news: NewsItem; index: number }) {
         </p>
 
         {/* Footer */}
-        <div className="flex items-center justify-between text-[oklch(0.58_0.007_250)] dark:text-[oklch(0.55_0.006_250)] text-xs pt-3 border-t border-black/[0.05] dark:border-white/[0.05]">
+        <div className="flex items-center justify-between text-[oklch(0.58_0.007_250)] dark:text-[oklch(0.55_0.006_250)] text-xs pt-3 border-t border-black/5 dark:border-white/5">
           <span className="flex items-center gap-1">
             <User size={11} aria-hidden="true" />
             Redaksi
@@ -217,7 +217,7 @@ function EmptyState() {
       </p>
       <Link
         href="/create"
-        className="mt-2 inline-flex items-center gap-2 rounded-lg bg-[oklch(0.52_0.18_240)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[oklch(0.44_0.20_240)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.52_0.18_240)] focus-visible:ring-offset-2"
+        className="mt-2 inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
       >
         Tulis Berita Pertama
         <ArrowRight size={15} aria-hidden="true" />
@@ -301,7 +301,7 @@ export default function HomePage() {
                 <section className="mt-10 sm:mt-14" aria-labelledby="latest-heading">
                   <h2
                     id="latest-heading"
-                    className="text-xl font-bold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] mb-6 pb-3 border-b border-black/[0.06] dark:border-white/[0.06]"
+                    className="text-xl font-bold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] mb-6 pb-3 border-b border-black/6 dark:border-white/6"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
                     Berita Terbaru
