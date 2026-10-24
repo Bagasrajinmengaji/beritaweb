@@ -13,13 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Daftarkan CORS middleware untuk semua request API
-        $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\HandleCors::class,
+        // Kecualikan endpoint API dari pengecekan CSRF token (menggunakan Sanctum Bearer Token)
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
         ]);
-
-        // Sanctum stateful domains (opsional untuk SPA cookie-based)
-        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
