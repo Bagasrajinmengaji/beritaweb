@@ -47,6 +47,7 @@ export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [avatarError, setAvatarError] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -230,9 +231,12 @@ export function Navbar() {
                 <div className="relative group">
                   <button
                     id="btn-user-menu"
+                    type="button"
+                    onClick={() => setUserMenuOpen((prev) => !prev)}
                     className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
                     aria-label={`Menu pengguna — ${user.name}`}
                     aria-haspopup="true"
+                    aria-expanded={userMenuOpen}
                   >
                     {user.avatar && !avatarError ? (
                       <Image
@@ -259,7 +263,12 @@ export function Navbar() {
 
                   {/* Dropdown menu */}
                   <div
-                    className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl opacity-0 scale-95 pointer-events-none group-focus-within:opacity-100 group-focus-within:scale-100 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 origin-top-right z-50"
+                    className={[
+                      'absolute right-0 top-full mt-2 w-52 rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl transition-all duration-150 origin-top-right z-50',
+                      userMenuOpen
+                        ? 'opacity-100 scale-100 pointer-events-auto'
+                        : 'opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:scale-100 group-focus-within:pointer-events-auto',
+                    ].join(' ')}
                     role="menu"
                     aria-label="Menu pengguna"
                   >
@@ -276,6 +285,7 @@ export function Navbar() {
                     {/* Dashboard Admin Link */}
                     <Link
                       href="/admin"
+                      onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors duration-100 focus-visible:outline-none"
                       role="menuitem"
                     >
@@ -286,6 +296,7 @@ export function Navbar() {
                     {/* Tulis Berita Link */}
                     <Link
                       href="/create"
+                      onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors duration-100 focus-visible:outline-none"
                       role="menuitem"
                     >
@@ -296,6 +307,7 @@ export function Navbar() {
                     {/* Logout */}
                     <button
                       id="btn-logout"
+                      type="button"
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors duration-100 rounded-b-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset"
                       role="menuitem"
