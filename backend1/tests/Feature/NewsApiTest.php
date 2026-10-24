@@ -114,9 +114,9 @@ test('unauthenticated user cannot update news', function () {
     $response->assertStatus(401);
 });
 
-test('authenticated user can update news title and content', function () {
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
+test('admin user can update news title and content', function () {
+    $admin = User::factory()->admin()->create();
+    Sanctum::actingAs($admin);
 
     $news = News::create([
         'title'   => 'Berita Lama',
@@ -144,11 +144,31 @@ test('authenticated user can update news title and content', function () {
     ]);
 });
 
-test('authenticated user can update news with new image and delete old image', function () {
+test('regular user cannot update news and receives 403 forbidden', function () {
+    $regularUser = User::factory()->create(['role' => 'user']);
+    Sanctum::actingAs($regularUser);
+
+    $news = News::create([
+        'title'   => 'Berita Terkunci',
+        'content' => 'Konten asli',
+        'image'   => '/storage/news/dummy.webp',
+    ]);
+
+    $response = $this->putJson("/api/news/{$news->id}", [
+        'title' => 'Coba Ubah oleh User Biasa',
+    ]);
+
+    $response->assertStatus(403)
+             ->assertJson([
+                 'message' => 'Akses ditolak. Hanya Admin yang dapat menghapus/mengedit berita secara langsung.'
+             ]);
+});
+
+test('admin user can update news with new image and delete old image', function () {
     Storage::fake('public');
 
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
+    $admin = User::factory()->admin()->create();
+    Sanctum::actingAs($admin);
 
     $oldPath = 'news/old_image.webp';
     Storage::disk('public')->put($oldPath, 'old-image-binary');
@@ -197,11 +217,28 @@ test('unauthenticated user cannot delete news', function () {
     $response->assertStatus(401);
 });
 
-test('authenticated user can delete news and remove physical file', function () {
+test('regular user cannot delete news and receives 403 forbidden', function () {
+    $regularUser = User::factory()->create(['role' => 'user']);
+    Sanctum::actingAs($regularUser);
+
+    $news = News::create([
+        'title'   => 'Berita Tak Boleh Dihapus User Biasa',
+        'content' => 'Konten',
+        'image'   => '/storage/news/dummy.webp',
+    ]);
+
+    $response = $this->deleteJson("/api/news/{$news->id}");
+    $response->assertStatus(403)
+             ->assertJson([
+                 'message' => 'Akses ditolak. Hanya Admin yang dapat menghapus/mengedit berita secara langsung.'
+             ]);
+});
+
+test('admin user can delete news and remove physical file', function () {
     Storage::fake('public');
 
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
+    $admin = User::factory()->admin()->create();
+    Sanctum::actingAs($admin);
 
     $relativePath = 'news/delete_test.webp';
     Storage::disk('public')->put($relativePath, 'fake-webp-content');
@@ -222,8 +259,8 @@ test('authenticated user can delete news and remove physical file', function () 
     $this->assertDatabaseMissing('news', ['id' => $news->id]);
 });
 
-test('can access /api/me when authenticated', function () {
-    $user = User::factory()->create([
+test('can access /api/me when authenticated and includes role', function () {
+    $user = User::factory()->admin()->create([
         'name'  => 'Budi Pratama',
         'email' => 'budi@example.com',
     ]);
@@ -232,7 +269,10 @@ test('can access /api/me when authenticated', function () {
 
     $response = $this->getJson('/api/me');
     $response->assertStatus(200)
-             ->assertJsonFragment(['email' => 'budi@example.com']);
+             ->assertJsonFragment([
+                 'email' => 'budi@example.com',
+                 'role'  => 'admin',
+             ]);
 });
 
 test('unauthenticated user cannot logout', function () {

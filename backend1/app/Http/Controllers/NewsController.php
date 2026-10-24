@@ -91,6 +91,12 @@ class NewsController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'message' => 'Akses ditolak. Hanya Admin yang dapat menghapus/mengedit berita secara langsung.'
+            ], 403);
+        }
+
         $news = News::findOrFail($id);
 
         $request->validate([
@@ -135,6 +141,12 @@ class NewsController extends Controller
      */
     public function destroy($id)
     {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'message' => 'Akses ditolak. Hanya Admin yang dapat menghapus/mengedit berita secara langsung.'
+            ], 403);
+        }
+
         $news = News::findOrFail($id);
 
         // Hapus file fisik gambar dari storage public

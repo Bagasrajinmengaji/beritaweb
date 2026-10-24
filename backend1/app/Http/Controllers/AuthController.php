@@ -49,6 +49,7 @@ class AuthController extends Controller
         $userData    = urlencode(json_encode([
             'name'   => $user->name,
             'email'  => $user->email,
+            'role'   => $user->role,
             'avatar' => $user->avatar,
         ]));
 
@@ -60,7 +61,16 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        return response()->json([
+            'id'         => $user->id,
+            'name'       => $user->name,
+            'email'      => $user->email,
+            'role'       => $user->role,
+            'avatar'     => $user->avatar,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ]);
     }
 
     /**
