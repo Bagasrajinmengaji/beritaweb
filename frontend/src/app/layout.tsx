@@ -43,15 +43,15 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-dvh flex flex-col bg-surface-50 dark:bg-[oklch(0.09_0.005_250)] text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] antialiased">
+      <body className="min-h-dvh flex flex-col bg-stone-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased">
         <ThemeProvider>
-          <Suspense fallback={<div className="h-16 w-full border-b border-black/6 dark:border-white/6" />}>
+          <Suspense fallback={<div className="h-16 w-full border-b border-stone-200 dark:border-zinc-800" />}>
             <Navbar />
           </Suspense>
           <div className="flex-1">
             {children}
           </div>
-          <footer className="mt-auto border-t border-black/6 dark:border-white/6 py-8 text-center text-sm text-[oklch(0.55_0.008_250)] dark:text-[oklch(0.55_0.006_250)]">
+          <footer className="mt-auto border-t border-stone-200 dark:border-zinc-800 py-8 text-center text-sm text-stone-500 dark:text-stone-400">
             <p>© 2026 Portal Berita. Seluruh hak cipta dilindungi.</p>
           </footer>
         </ThemeProvider>

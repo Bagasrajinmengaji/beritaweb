@@ -30,13 +30,13 @@ function CallbackHandler() {
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <span
-        className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"
+        className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"
         aria-hidden="true"
       />
-      <p className="text-base font-medium text-[oklch(0.45_0.007_250)] dark:text-[oklch(0.6_0.006_250)]">
+      <p className="text-base font-medium text-zinc-800 dark:text-zinc-200">
         Memproses login Google…
       </p>
-      <p className="text-sm text-[oklch(0.58_0.007_250)] dark:text-[oklch(0.5_0.006_250)]">
+      <p className="text-sm text-stone-500 dark:text-stone-400">
         Anda akan dialihkan otomatis.
       </p>
     </div>
@@ -47,7 +47,7 @@ export default function AuthCallbackPage() {
   return (
     <main
       id="auth-callback-loading"
-      className="flex min-h-screen items-center justify-center"
+      className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-zinc-950"
       role="status"
       aria-label="Memproses login Google…"
     >
@@ -55,10 +55,10 @@ export default function AuthCallbackPage() {
         fallback={
           <div className="flex flex-col items-center gap-4 text-center">
             <span
-              className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"
+              className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"
               aria-hidden="true"
             />
-            <p className="text-base font-medium text-[oklch(0.45_0.007_250)] dark:text-[oklch(0.6_0.006_250)]">
+            <p className="text-base font-medium text-zinc-800 dark:text-zinc-200">
               Menghubungkan…
             </p>
           </div>

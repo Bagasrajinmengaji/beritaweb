@@ -49,9 +49,7 @@ function Toast({
       aria-live="polite"
       className={[
         'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl px-5 py-3.5 shadow-xl text-white text-sm font-medium toast-enter toast-exit min-w-72 max-w-sm',
-        isSuccess
-          ? 'bg-[oklch(0.42_0.15_145)]'
-          : 'bg-[oklch(0.42_0.18_25)]',
+        isSuccess ? 'bg-emerald-600' : 'bg-rose-600',
       ].join(' ')}
     >
       {isSuccess
@@ -81,7 +79,7 @@ function ImagePreview({
 }) {
   const src = URL.createObjectURL(file);
   return (
-    <div className="relative mt-3 rounded-xl overflow-hidden border border-black/8 dark:border-white/8">
+    <div className="relative mt-3 rounded-xl overflow-hidden border border-stone-200 dark:border-zinc-800">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -91,12 +89,12 @@ function ImagePreview({
       <button
         type="button"
         onClick={onRemove}
-        className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         aria-label="Hapus gambar yang dipilih"
       >
         <X size={14} aria-hidden="true" />
       </button>
-      <p className="px-3 py-1.5 text-xs text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)] bg-black/5 dark:bg-white/5">
+      <p className="px-3 py-1.5 text-xs text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-zinc-800">
         {file.name} — {(file.size / 1024).toFixed(0)} KB
       </p>
     </div>
@@ -224,10 +222,10 @@ export default function CreatePage() {
 
   const inputClass = (field: string) =>
     [
-      'w-full rounded-lg border px-4 py-2.5 text-sm bg-white dark:bg-[oklch(0.16_0.007_250)] text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] placeholder:text-[oklch(0.65_0.006_250)] dark:placeholder:text-[oklch(0.5_0.005_250)] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[oklch(0.52_0.18_240)] focus:border-transparent',
+      'w-full rounded-lg border px-4 py-2.5 text-sm bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 transition-colors duration-150 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20',
       fieldErrors[field]
         ? 'border-red-400 dark:border-red-700'
-        : 'border-black/12 dark:border-white/12',
+        : 'border-stone-300 dark:border-zinc-700',
     ].join(' ');
 
   // Loading skeleton state sebelum mounted
@@ -235,7 +233,7 @@ export default function CreatePage() {
     return (
       <main className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-14 animate-pulse">
         <div className="skeleton h-5 w-24 rounded mb-8" />
-        <div className="rounded-2xl border border-black/6 dark:border-white/6 p-8 space-y-6">
+        <div className="rounded-2xl border border-stone-200 dark:border-zinc-800 p-8 space-y-6 bg-white dark:bg-zinc-900">
           <div className="skeleton h-8 w-48 rounded" />
           <div className="skeleton h-4 w-72 rounded" />
           <div className="skeleton h-10 w-full rounded" />
@@ -249,26 +247,26 @@ export default function CreatePage() {
   if (!token) {
     return (
       <main id="main-content" className="mx-auto max-w-lg px-4 sm:px-6 py-16 sm:py-24" role="main">
-        <div className="rounded-2xl border border-black/8 dark:border-white/8 bg-surface-50 dark:bg-[oklch(0.13_0.006_250)] p-8 text-center shadow-lg">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">
+        <div className="rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 text-center shadow-lg">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
             <ShieldAlert size={30} aria-hidden="true" />
           </div>
 
           <h1
-            className="text-2xl font-bold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] mb-2"
+            className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             Akses Terbatas
           </h1>
 
-          <p className="text-sm text-[oklch(0.45_0.007_250)] dark:text-[oklch(0.6_0.006_250)] leading-relaxed mb-6">
+          <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
             Anda harus login dengan Google untuk menulis dan menerbitkan berita di Portal Berita.
           </p>
 
           <div className="flex flex-col gap-3">
             <button
               onClick={handleLoginGoogle}
-              className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[oklch(0.18_0.008_250)] px-4 py-3 text-sm font-semibold text-[oklch(0.18_0.008_250)] dark:text-white hover:bg-black/4 dark:hover:bg-white/6 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm"
+              className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:border-orange-500/50 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
             >
               <GoogleIcon size={18} />
               <span>Masuk dengan Google</span>
@@ -276,7 +274,7 @@ export default function CreatePage() {
 
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition-colors py-2"
+              className="inline-flex items-center justify-center gap-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2"
             >
               <ArrowLeft size={15} aria-hidden="true" />
               Kembali ke Beranda
@@ -303,7 +301,7 @@ export default function CreatePage() {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg px-0.5"
+            className="inline-flex items-center gap-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg px-0.5"
             aria-label="Kembali ke halaman utama"
           >
             <ArrowLeft size={16} aria-hidden="true" />
@@ -312,15 +310,15 @@ export default function CreatePage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-black/6 dark:border-white/6 bg-surface-50 dark:bg-[oklch(0.13_0.006_250)] shadow-sm px-6 py-8 sm:px-8">
+        <div className="rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm px-6 py-8 sm:px-8">
           <div className="mb-7">
             <h1
-              className="text-2xl font-bold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)]"
+              className="text-2xl font-bold text-zinc-900 dark:text-zinc-100"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Tulis Berita Baru
             </h1>
-            <p className="mt-1 text-sm text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)]">
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
               Isi formulir di bawah ini untuk menerbitkan berita ke portal.
             </p>
           </div>
@@ -330,9 +328,9 @@ export default function CreatePage() {
             <div>
               <label
                 htmlFor="news-title"
-                className="block text-sm font-semibold text-[oklch(0.28_0.008_250)] dark:text-[oklch(0.85_0.005_250)] mb-1.5"
+                className="block text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1.5"
               >
-                Judul Berita <span aria-hidden="true" className="text-red-500">*</span>
+                Judul Berita <span aria-hidden="true" className="text-orange-600 dark:text-orange-500">*</span>
               </label>
               <input
                 id="news-title"
@@ -360,9 +358,9 @@ export default function CreatePage() {
             {/* Content WYSIWYG */}
             <div>
               <label
-                className="block text-sm font-semibold text-[oklch(0.28_0.008_250)] dark:text-[oklch(0.85_0.005_250)] mb-1.5"
+                className="block text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1.5"
               >
-                Konten Berita <span aria-hidden="true" className="text-red-500">*</span>
+                Konten Berita <span aria-hidden="true" className="text-orange-600 dark:text-orange-500">*</span>
               </label>
               <RichTextEditor
                 content={content}
@@ -385,9 +383,9 @@ export default function CreatePage() {
             <div>
               <label
                 htmlFor="news-image"
-                className="block text-sm font-semibold text-[oklch(0.28_0.008_250)] dark:text-[oklch(0.85_0.005_250)] mb-1.5"
+                className="block text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1.5"
               >
-                Gambar Sampul <span aria-hidden="true" className="text-red-500">*</span>
+                Gambar Sampul <span aria-hidden="true" className="text-orange-600 dark:text-orange-500">*</span>
               </label>
 
               {/* Drop zone */}
@@ -405,23 +403,23 @@ export default function CreatePage() {
                 }}
                 className={[
                   'cursor-pointer flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 transition-colors duration-150',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-                  isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:border-brand-500/50 hover:bg-brand-500/2',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
+                  isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:border-orange-500/60 hover:bg-orange-50/20 dark:hover:bg-orange-950/10',
                   fieldErrors.image
                     ? 'border-red-400 dark:border-red-700 bg-red-50/50 dark:bg-red-950/10'
-                    : 'border-black/12 dark:border-white/12 bg-black/1 dark:bg-white/1',
+                    : 'border-stone-300 dark:border-zinc-700 bg-stone-50/50 dark:bg-zinc-950/40',
                 ].join(' ')}
               >
                 <Upload
                   size={28}
-                  className="text-[oklch(0.65_0.007_250)] dark:text-[oklch(0.5_0.006_250)]"
+                  className="text-stone-400 dark:text-stone-500"
                   aria-hidden="true"
                 />
                 <div className="text-center">
-                  <p className="text-sm font-medium text-[oklch(0.35_0.008_250)] dark:text-[oklch(0.75_0.006_250)]">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     {image ? image.name : 'Klik atau seret gambar ke sini'}
                   </p>
-                  <p className="mt-1 text-xs text-[oklch(0.58_0.007_250)] dark:text-[oklch(0.5_0.006_250)]">
+                  <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                     Didukung: JPG, JPEG, PNG, WEBP — Maks. 5 MB
                   </p>
                 </div>
@@ -444,8 +442,8 @@ export default function CreatePage() {
               />
 
               {/* Helper text */}
-              <p className="mt-2 text-xs text-[oklch(0.58_0.007_250)] dark:text-[oklch(0.5_0.006_250)]">
-                Gambar akan otomatis dikonversi ke format <strong className="font-semibold">WebP</strong> (kualitas 80%) oleh sistem backend.
+              <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
+                Gambar akan otomatis dikonversi ke format <strong className="font-semibold text-zinc-800 dark:text-zinc-200">WebP</strong> (kualitas 80%) oleh sistem backend.
               </p>
 
               {fieldErrors.image && (
@@ -466,7 +464,7 @@ export default function CreatePage() {
               type="submit"
               disabled={isSubmitting}
               aria-disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 text-white font-semibold text-sm py-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 dark:focus-visible:ring-offset-[oklch(0.13_0.006_250)] shadow-sm"
+              className="w-full flex items-center justify-center gap-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 text-white font-semibold text-sm py-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 shadow-sm"
             >
               {isSubmitting ? (
                 <>

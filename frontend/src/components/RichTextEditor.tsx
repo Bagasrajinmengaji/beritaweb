@@ -41,10 +41,10 @@ function ToolbarButton({
       aria-label={title}
       className={[
         'flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
         isActive
-          ? 'bg-brand-500/15 text-brand-600 dark:bg-brand-500/25 dark:text-brand-300 font-semibold'
-          : 'text-[oklch(0.38_0.008_250)] dark:text-[oklch(0.75_0.006_250)] hover:bg-black/5 dark:hover:bg-white/7',
+          ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300 font-semibold'
+          : 'text-stone-600 dark:text-stone-300 hover:bg-stone-200/60 dark:hover:bg-zinc-800',
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
       ].join(' ')}
     >
@@ -58,7 +58,7 @@ function ToolbarButton({
 function ToolbarDivider() {
   return (
     <span
-      className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10"
+      className="mx-1 h-5 w-px bg-stone-200 dark:bg-zinc-800"
       aria-hidden="true"
     />
   );
@@ -94,12 +94,11 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert max-w-none focus:outline-none min-h-48 px-4 py-3.5 text-sm leading-relaxed text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)]',
+          'prose dark:prose-invert max-w-none focus:outline-none min-h-48 px-4 py-3.5 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 prose-a:text-orange-600 dark:prose-a:text-orange-400',
       },
     },
     onUpdate: ({ editor: ed }) => {
       const html = ed.getHTML();
-      // Jika kosong (hanya tag <p></p>), kirimkan string kosong agar validasi require bekerja
       const isEmpty = ed.isEmpty;
       onChange(isEmpty ? '' : html);
     },
@@ -107,7 +106,7 @@ export function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className="rounded-lg border border-black/12 dark:border-white/12 p-4 min-h-56 bg-white dark:bg-[oklch(0.16_0.007_250)] animate-pulse">
+      <div className="rounded-xl border border-stone-200 dark:border-zinc-800 p-4 min-h-56 bg-white dark:bg-zinc-900 animate-pulse">
         <div className="skeleton h-8 w-full rounded mb-3" />
         <div className="skeleton h-32 w-full rounded" />
       </div>
@@ -117,16 +116,16 @@ export function RichTextEditor({
   return (
     <div
       className={[
-        'rounded-xl border overflow-hidden transition-colors duration-150 bg-white dark:bg-[oklch(0.16_0.007_250)]',
+        'rounded-xl border overflow-hidden transition-colors duration-150 bg-white dark:bg-zinc-900',
         hasError
           ? 'border-red-400 dark:border-red-700'
-          : 'border-black/12 dark:border-white/12 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20',
+          : 'border-stone-200 dark:border-zinc-800 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20',
         disabled ? 'opacity-60 cursor-not-allowed' : '',
       ].join(' ')}
     >
       {/* ── Toolbar ── */}
       <div
-        className="flex flex-wrap items-center gap-0.5 border-b border-black/8 dark:border-white/8 bg-black/2 dark:bg-white/2 px-2.5 py-1.5"
+        className="flex flex-wrap items-center gap-0.5 border-b border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-900/80 px-2.5 py-1.5"
         role="toolbar"
         aria-label="Pemformatan Teks"
       >

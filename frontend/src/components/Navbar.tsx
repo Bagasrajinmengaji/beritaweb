@@ -15,7 +15,7 @@ interface AuthUser {
   avatar?: string | null;
 }
 
-// ─── Google icon SVG (inline — no extra package needed) ───────────────────────
+// ─── Google icon SVG ──────────────────────────────────────────────────────────
 
 function GoogleIcon({ size = 18 }: { size?: number }) {
   return (
@@ -71,7 +71,6 @@ export function Navbar() {
     setMounted(true);
     syncAuth();
 
-    // Dengarkan perubahan localStorage dari tab/window lain
     window.addEventListener('storage', syncAuth);
     return () => window.removeEventListener('storage', syncAuth);
   }, [syncAuth]);
@@ -86,7 +85,6 @@ export function Navbar() {
   const handleLogout = async () => {
     const token = localStorage.getItem('auth_token');
     if (token) {
-      // Revoke token di backend (best-effort, tidak block UI)
       fetch(`${API}/logout`, {
         method: 'POST',
         headers: {
@@ -112,7 +110,7 @@ export function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full border-b border-black/6 dark:border-white/6 bg-surface-50/90 dark:bg-[oklch(0.09_0.005_250)]/90 backdrop-blur-md"
+      className="sticky top-0 z-50 w-full border-b border-stone-200 dark:border-zinc-800 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md"
       role="banner"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -120,16 +118,16 @@ export function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="shrink-0 flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
+            className="shrink-0 flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg group"
             aria-label="Portal Berita — Halaman Utama"
           >
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white font-bold text-sm select-none"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 dark:bg-orange-500 text-white font-bold text-sm select-none shadow-sm group-hover:scale-105 transition-transform"
               aria-hidden="true"
             >
               PB
             </span>
-            <span className="hidden sm:block font-semibold text-[15px] text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] tracking-tight">
+            <span className="hidden sm:block font-semibold text-[15px] text-zinc-900 dark:text-zinc-100 tracking-tight group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
               Portal Berita
             </span>
           </Link>
@@ -140,11 +138,11 @@ export function Navbar() {
             <Link
               href="/"
               className={[
-                'hidden sm:inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                'hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
                 pathname === '/'
-                  ? 'bg-brand-500/10 text-brand-600 dark:text-brand-300'
-                  : 'text-brand-700/75 hover:text-brand-700 dark:text-brand-300/65 dark:hover:text-brand-200 hover:bg-black/4 dark:hover:bg-white/6',
+                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 font-semibold'
+                  : 'text-stone-600 hover:text-orange-600 dark:text-stone-300 dark:hover:text-orange-400 hover:bg-stone-200/60 dark:hover:bg-zinc-900',
               ].join(' ')}
               aria-current={pathname === '/' ? 'page' : undefined}
             >
@@ -154,7 +152,7 @@ export function Navbar() {
             {/* Dark mode toggle */}
             <button
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-600 dark:text-brand-300 hover:bg-black/6 dark:hover:bg-white/8 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-200/60 dark:hover:bg-zinc-900 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
               aria-label={isDark ? 'Beralih ke mode terang' : 'Beralih ke mode gelap'}
               title={isDark ? 'Mode terang' : 'Mode gelap'}
             >
@@ -172,7 +170,7 @@ export function Navbar() {
               <button
                 id="btn-login-google"
                 onClick={handleLogin}
-                className="inline-flex items-center gap-2 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[oklch(0.16_0.007_250)] px-3.5 py-2 text-sm font-semibold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.88_0.005_250)] hover:bg-black/4 dark:hover:bg-white/6 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm"
+                className="inline-flex items-center gap-2 rounded-lg border border-stone-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:border-orange-500/50 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 shadow-sm"
               >
                 <GoogleIcon size={17} />
                 <span className="hidden sm:inline">Masuk dengan Google</span>
@@ -186,7 +184,7 @@ export function Navbar() {
                 {/* Tulis berita CTA */}
                 <Link
                   href="/create"
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 shadow-sm"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-2 text-sm font-semibold active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 shadow-sm"
                 >
                   <PenLine size={14} aria-hidden="true" />
                   Tulis Berita
@@ -196,7 +194,7 @@ export function Navbar() {
                 <div className="relative group">
                   <button
                     id="btn-user-menu"
-                    className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                    className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
                     aria-label={`Menu pengguna — ${user.name}`}
                     aria-haspopup="true"
                   >
@@ -206,35 +204,35 @@ export function Navbar() {
                         alt={user.name}
                         width={34}
                         height={34}
-                        className="rounded-full object-cover border-2 border-brand-500/30"
+                        className="rounded-full object-cover border-2 border-orange-500/40"
                         onError={() => setAvatarError(true)}
                         unoptimized
                       />
                     ) : (
                       <span
-                        className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-brand-500 text-white text-xs font-bold select-none border-2 border-brand-500/30"
+                        className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-orange-600 dark:bg-orange-500 text-white text-xs font-bold select-none border-2 border-orange-500/40"
                         aria-hidden="true"
                       >
                         {initials}
                       </span>
                     )}
-                    <span className="hidden sm:block text-sm font-medium text-[oklch(0.28_0.008_250)] dark:text-[oklch(0.85_0.005_250)] max-w-28 truncate">
+                    <span className="hidden sm:block text-sm font-medium text-zinc-800 dark:text-zinc-200 max-w-28 truncate">
                       {user.name.split(' ')[0]}
                     </span>
                   </button>
 
                   {/* Dropdown menu */}
                   <div
-                    className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-black/8 dark:border-white/8 bg-white dark:bg-[oklch(0.14_0.007_250)] shadow-xl opacity-0 scale-95 pointer-events-none group-focus-within:opacity-100 group-focus-within:scale-100 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 origin-top-right z-50"
+                    className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl opacity-0 scale-95 pointer-events-none group-focus-within:opacity-100 group-focus-within:scale-100 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 origin-top-right z-50"
                     role="menu"
                     aria-label="Menu pengguna"
                   >
                     {/* User info */}
-                    <div className="px-4 py-3 border-b border-black/6 dark:border-white/6">
-                      <p className="text-sm font-semibold text-[oklch(0.18_0.008_250)] dark:text-[oklch(0.92_0.004_250)] truncate">
+                    <div className="px-4 py-3 border-b border-stone-100 dark:border-zinc-800">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                         {user.name}
                       </p>
-                      <p className="text-xs text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)] truncate mt-0.5">
+                      <p className="text-xs text-stone-500 dark:text-stone-400 truncate mt-0.5">
                         {user.email}
                       </p>
                     </div>
@@ -242,7 +240,7 @@ export function Navbar() {
                     {/* Mobile: Tulis Berita link */}
                     <Link
                       href="/create"
-                      className="sm:hidden flex items-center gap-2 px-4 py-2.5 text-sm text-[oklch(0.28_0.008_250)] dark:text-[oklch(0.82_0.005_250)] hover:bg-black/4 dark:hover:bg-white/6 transition-colors duration-100 focus-visible:outline-none"
+                      className="sm:hidden flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors duration-100 focus-visible:outline-none"
                       role="menuitem"
                     >
                       <PenLine size={14} aria-hidden="true" />

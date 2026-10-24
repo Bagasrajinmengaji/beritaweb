@@ -37,6 +37,8 @@ function getImageSrc(imagePath: string): string {
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
+const SKELETON_WIDTHS = ['94%', '88%', '96%', '85%', '91%', '78%'];
+
 function DetailSkeleton() {
   return (
     <div className="max-w-3xl mx-auto animate-pulse space-y-6" aria-busy="true" aria-label="Memuat detail berita…">
@@ -49,8 +51,8 @@ function DetailSkeleton() {
       </div>
       <div className="skeleton aspect-video w-full rounded-2xl" />
       <div className="space-y-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="skeleton h-4 rounded" style={{ width: `${85 + Math.random() * 15}%` }} />
+        {SKELETON_WIDTHS.map((width, i) => (
+          <div key={i} className="skeleton h-4 rounded" style={{ width }} />
         ))}
       </div>
     </div>
@@ -99,7 +101,7 @@ export default function NewsDetailPage({
       <div className="mb-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg px-0.5"
+          className="inline-flex items-center gap-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg px-0.5"
           aria-label="Kembali ke halaman utama"
         >
           <ArrowLeft size={16} aria-hidden="true" />
@@ -125,7 +127,7 @@ export default function NewsDetailPage({
           <p className="text-sm text-red-600 dark:text-red-500 mb-4">{error}</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-300 underline underline-offset-2 hover:no-underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400 underline underline-offset-2 hover:no-underline"
           >
             <ArrowLeft size={14} aria-hidden="true" />
             Kembali ke Beranda
@@ -137,33 +139,33 @@ export default function NewsDetailPage({
       {!loading && !error && news && (
         <article className="max-w-3xl mx-auto" aria-labelledby="article-title">
           {/* Category badge */}
-          <span className="inline-flex items-center rounded-full bg-brand-500/10 dark:bg-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-600 dark:text-brand-300 tracking-wide uppercase mb-5">
+          <span className="inline-flex items-center rounded-full bg-orange-100 dark:bg-orange-950/60 px-3 py-1 text-xs font-semibold text-orange-700 dark:text-orange-300 tracking-wide uppercase mb-5 border border-orange-200/50 dark:border-orange-900/50">
             Berita
           </span>
 
           {/* Title */}
           <h1
             id="article-title"
-            className="text-3xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight mb-5"
+            className="text-3xl md:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 leading-tight mb-5"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             {news.title}
           </h1>
 
           {/* Meta */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-[oklch(0.55_0.007_250)] dark:text-[oklch(0.55_0.006_250)] mb-8 pb-6 border-b border-black/6 dark:border-white/6">
-            <span className="flex items-center gap-1.5">
-              <User size={14} aria-hidden="true" />
+          <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500 dark:text-stone-400 mb-8 pb-6 border-b border-stone-200 dark:border-zinc-800">
+            <span className="flex items-center gap-1.5 font-medium">
+              <User size={14} aria-hidden="true" className="text-orange-600 dark:text-orange-400" />
               <span>{news.author ?? 'Redaksi Portal Berita'}</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <Calendar size={14} aria-hidden="true" />
+              <Calendar size={14} aria-hidden="true" className="text-orange-600 dark:text-orange-400" />
               <time dateTime={news.created_at}>{formatDate(news.created_at)}</time>
             </span>
           </div>
 
           {/* Cover image */}
-          <div className="relative w-full rounded-2xl overflow-hidden mb-10 shadow-lg">
+          <div className="relative w-full rounded-2xl overflow-hidden mb-10 shadow-lg border border-stone-200 dark:border-zinc-800">
             <Image
               src={getImageSrc(news.image)}
               alt={news.title}
@@ -177,7 +179,7 @@ export default function NewsDetailPage({
 
           {/* Body */}
           <div
-            className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 mt-8 leading-relaxed text-base sm:text-lg"
+            className="prose dark:prose-invert max-w-none text-zinc-900 dark:text-zinc-100 prose-a:text-orange-600 dark:prose-a:text-orange-400 mt-8 leading-relaxed text-base sm:text-lg"
             dangerouslySetInnerHTML={{ __html: news.content }}
           />
         </article>
