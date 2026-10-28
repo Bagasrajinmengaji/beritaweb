@@ -151,23 +151,17 @@ export function RichTextEditor({
           autosave_interval: '30s',
 
           // ── 5. AI Trial Token Authorization Provider ────────────────────────
-          tinymceai_token_provider: (
-            success: (token: string) => void,
-            failure: (error: string) => void
-          ) => {
-            fetch('https://api.tiny.cloud/v1/ai/jwt', {
+          tinymceai_token_provider: async () => {
+            await fetch(`https://demo.api.tiny.cloud/1/${apiKey}/auth/random`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ apiKey }),
-            })
-              .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-                return res.json();
-              })
-              .then((data) => success(data.token))
-              .catch((err) =>
-                failure(err?.message ?? 'TinyMCE AI token acquisition failed.')
-              );
+              credentials: 'include',
+            });
+            const response = await fetch(
+              `https://demo.api.tiny.cloud/1/${apiKey}/jwt/tinymceai`,
+              { credentials: 'include' }
+            );
+            const token = await response.text();
+            return { token };
           },
 
           // ── 6. Image Upload Handler (Custom Next.js API /api/upload) ────────
