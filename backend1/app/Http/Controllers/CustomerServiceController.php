@@ -207,4 +207,87 @@ class CustomerServiceController extends Controller
 
         return response()->json(['message' => 'Pesan ditandai telah dibaca.']);
     }
+
+    /**
+     * Hapus satu pesan spesifik (Admin atau pemilik pesan).
+     */
+    public function destroy($id)
+    {
+        $user = auth('sanctum')->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $message = CustomerServiceMessage::find($id);
+        if (!$message) {
+            return response()->json(['message' => 'Pesan tidak ditemukan.'], 404);
+        }
+
+        $isAdmin = $user->role === 'admin';
+        if (!$isAdmin && $message->user_id !== $user->id) {
+            return response()->json(['message' => 'Anda tidak memiliki izin menghapus pesan ini.'], 403);
+        }
+
+        $message->delete();
+
+        return response()->json([
+            'message' => 'Pesan chat berhasil dihapus.',
+            'id' => (int) $id,
+        ]);
+    }
+
+    /**
+     * Hapus seluruh sesi percakapan chat pengguna tertentu.
+     */
+    public function destroySession($sessionId)
+    {
+        $user = auth('sanctum')->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $isAdmin = $user->role === 'admin';
+        if (!$isAdmin) {
+            $ownedSession = 'usr_' . $user->id;
+            if ($sessionId !== $ownedSession) {
+                return response()->json(['message' => 'Anda tidak memiliki izin menghapus sesi ini.'], 403);
+            }
+        }
+
+        $deletedCount = CustomerServiceMessage::where('session_id', $sessionId)->delete();
+
+        return response()->json([
+            'message' => "Percakapan berhasil dihapus ({$deletedCount} pesan).",
+            'session_id' => $sessionId,
+            'deleted_count' => $deletedCount,
+        ]);
+    }
+
+    /**
+     * Hapus semua chat/notifikasi dari user (Khusus Admin) agar notifikasi tidak menumpuk.
+     */
+    public function clearAll(Request $request)
+    {
+        $user = auth('sanctum')->user();
+        if (!$user || $user->role !== 'admin') {
+            return response()->json(['message' => 'Hanya admin yang dapat menghapus seluruh chat.'], 403);
+        }
+
+        $scope = $request->input('scope', 'all'); // 'all', 'user_only', 'unread_only'
+
+        if ($scope === 'unread_only') {
+            $deletedCount = CustomerServiceMessage::where('sender', 'user')
+                ->where('is_read_by_admin', false)
+                ->delete();
+        } elseif ($scope === 'user_only') {
+            $deletedCount = CustomerServiceMessage::where('sender', 'user')->delete();
+        } else {
+            $deletedCount = CustomerServiceMessage::query()->delete();
+        }
+
+        return response()->json([
+            'message' => "Seluruh chat berhasil dibersihkan ({$deletedCount} pesan dihapus).",
+            'deleted_count' => $deletedCount,
+        ]);
+    }
 }

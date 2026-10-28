@@ -29,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ─── Customer Service & Chat Admin ─────────────────────────────────────────────
-Route::get('/cs/messages',          [\App\Http\Controllers\CustomerServiceController::class, 'index']);
-Route::post('/cs/messages',         [\App\Http\Controllers\CustomerServiceController::class, 'store']);
-Route::post('/cs/mark-as-read',     [\App\Http\Controllers\CustomerServiceController::class, 'markAsRead']);
+Route::get('/cs/messages',                 [\App\Http\Controllers\CustomerServiceController::class, 'index']);
+Route::post('/cs/messages',                [\App\Http\Controllers\CustomerServiceController::class, 'store']);
+Route::post('/cs/mark-as-read',            [\App\Http\Controllers\CustomerServiceController::class, 'markAsRead']);
+Route::delete('/cs/messages/{id}',         [\App\Http\Controllers\CustomerServiceController::class, 'destroy'])->middleware('auth:sanctum');
+Route::delete('/cs/sessions/{sessionId}',  [\App\Http\Controllers\CustomerServiceController::class, 'destroySession'])->middleware('auth:sanctum');
+Route::delete('/cs/clear-all',             [\App\Http\Controllers\CustomerServiceController::class, 'clearAll'])->middleware('auth:sanctum');

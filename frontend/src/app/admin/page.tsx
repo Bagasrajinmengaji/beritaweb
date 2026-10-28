@@ -251,12 +251,79 @@ export default function AdminDashboardPage() {
 
     window.addEventListener('storage', syncToken);
     window.addEventListener('authChange', syncToken);
+    window.addEventListener('csMessagesChanged', fetchCSNotifications);
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', syncToken);
       window.removeEventListener('authChange', syncToken);
+      window.removeEventListener('csMessagesChanged', fetchCSNotifications);
     };
   }, [fetchNews, fetchCSNotifications]);
+
+  // ── 1c. Hapus Satu Pesan Chat Pengguna ──
+  const handleDeleteCSMessage = async (id: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Hapus chat notifikasi dari pengguna ini?')) return;
+
+    const activeToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (!activeToken) return;
+
+    // Optimistic update
+    setUserRequests((prev) => prev.filter((r) => r.id !== id));
+    setUnreadCSCount((prev) => Math.max(0, prev - 1));
+
+    try {
+      const res = await fetch(`${API}/cs/messages/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+      });
+      if (res.ok) {
+        setToast({ message: 'Chat berhasil dihapus.', type: 'success' });
+        window.dispatchEvent(new CustomEvent('csMessagesChanged'));
+        fetchCSNotifications();
+      } else {
+        throw new Error('Gagal menghapus pesan.');
+      }
+    } catch {
+      setToast({ message: 'Gagal menghapus pesan chat.', type: 'error' });
+      fetchCSNotifications();
+    }
+  };
+
+  // ── 1d. Hapus Seluruh Chat Pengguna (Bersihkan Notifikasi) ──
+  const handleClearAllCSChats = async () => {
+    if (!window.confirm('Bersihkan seluruh chat masuk dari user agar notifikasi tidak menumpuk?')) return;
+
+    const activeToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (!activeToken) return;
+
+    // Optimistic update
+    setUserRequests([]);
+    setUnreadCSCount(0);
+
+    try {
+      const res = await fetch(`${API}/cs/clear-all`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+      });
+      if (res.ok) {
+        setToast({ message: 'Seluruh notifikasi chat user berhasil dibersihkan.', type: 'success' });
+        window.dispatchEvent(new CustomEvent('csMessagesChanged'));
+        fetchCSNotifications();
+      } else {
+        throw new Error('Gagal membersihkan chat.');
+      }
+    } catch {
+      setToast({ message: 'Gagal membersihkan notifikasi chat.', type: 'error' });
+      fetchCSNotifications();
+    }
+  };
 
   // ── 2. Handle Login Google ──
   const handleLoginGoogle = () => {
@@ -551,79 +618,105 @@ export default function AdminDashboardPage() {
 
                 {/* Dropdown Notifikasi Kebutuhan User */}
                 {notifDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-zinc-800 mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
-                          <Bell size={14} />
-                        </span>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                          Kebutuhan & Permohonan User
-                        </h4>
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setNotifDropdownOpen(false)}
+                      aria-hidden="true"
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-84 sm:w-96 rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-zinc-800 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
+                            <Bell size={14} />
+                          </span>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                            Permohonan User
+                          </h4>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300">
+                            {unreadCSCount} Baru
+                          </span>
+                          {(userRequests.length > 0 || unreadCSCount > 0) && (
+                            <button
+                              type="button"
+                              onClick={handleClearAllCSChats}
+                              className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                              title="Hapus semua chat dari user agar notifikasi tidak menumpuk"
+                            >
+                              <Trash2 size={11} />
+                              <span>Bersihkan Semua</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300">
-                        {unreadCSCount} Baru
-                      </span>
-                    </div>
 
-                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                      {userRequests.length === 0 ? (
-                        <p className="text-xs text-stone-400 text-center py-6">
-                          Tidak ada permohonan baru dari user saat ini.
-                        </p>
-                      ) : (
-                        userRequests.map((req) => (
-                          <div
-                            key={req.id}
-                            className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/60 p-3 text-xs space-y-1.5"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                                {req.user_name || 'Pengguna Portal'}
-                              </span>
-                              <span className="text-[10px] text-stone-400">
-                                {new Date(req.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
+                      <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                        {userRequests.length === 0 ? (
+                          <p className="text-xs text-stone-400 text-center py-6">
+                            Tidak ada permohonan baru dari user saat ini.
+                          </p>
+                        ) : (
+                          userRequests.map((req) => (
+                            <div
+                              key={req.id}
+                              className="rounded-xl border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/60 p-3 text-xs space-y-1.5"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                                  {req.user_name || 'Pengguna Portal'}
+                                </span>
+                                <span className="text-[10px] text-stone-400">
+                                  {new Date(req.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
 
-                            {req.news_title ? (
-                              <p className="font-semibold text-orange-600 dark:text-orange-400 text-[11px] truncate">
-                                🗑️ Permohonan Hapus #{req.news_id}: {req.news_title}
+                              {req.news_title ? (
+                                <p className="font-semibold text-orange-600 dark:text-orange-400 text-[11px] truncate">
+                                  🗑️ Permohonan Hapus #{req.news_id}: {req.news_title}
+                                </p>
+                              ) : (
+                                <p className="font-semibold text-sky-600 dark:text-sky-400 text-[11px] truncate">
+                                  💬 Pertanyaan / Konsultasi Pengguna
+                                </p>
+                              )}
+
+                              <p className="text-stone-600 dark:text-stone-300 text-[11px] line-clamp-2">
+                                &quot;{req.message}&quot;
                               </p>
-                            ) : (
-                              <p className="font-semibold text-sky-600 dark:text-sky-400 text-[11px] truncate">
-                                💬 Pertanyaan / Konsultasi Pengguna
-                              </p>
-                            )}
 
-                            <p className="text-stone-600 dark:text-stone-300 text-[11px] line-clamp-2">
-                              "{req.message}"
-                            </p>
-
-                            <div className="flex items-center justify-between pt-1">
-                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                ✓ Bot telah konfirmasi awal
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setNotifDropdownOpen(false);
-                                  handleOpenCSChat(
-                                    req.news_id ? { id: req.news_id, title: req.news_title || '' } : undefined,
-                                    req.session_id
-                                  );
-                                }}
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400 cursor-pointer"
-                              >
-                                <span>Balas Chat</span>
-                                <span>&rarr;</span>
-                              </button>
+                              <div className="flex items-center justify-between pt-1 border-t border-stone-200/60 dark:border-zinc-700/50 mt-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteCSMessage(req.id, e)}
+                                  className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 py-0.5 rounded transition-colors cursor-pointer"
+                                  title="Hapus chat ini agar notifikasi tidak menumpuk"
+                                >
+                                  <Trash2 size={11} />
+                                  <span>Hapus Chat</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNotifDropdownOpen(false);
+                                    handleOpenCSChat(
+                                      req.news_id ? { id: req.news_id, title: req.news_title || '' } : undefined,
+                                      req.session_id
+                                    );
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400 cursor-pointer"
+                                >
+                                  <span>Balas Chat</span>
+                                  <span>&rarr;</span>
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))
-                      )}
+                          ))
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             )}

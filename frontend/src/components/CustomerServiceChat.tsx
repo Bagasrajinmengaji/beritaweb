@@ -240,6 +240,91 @@ export function CustomerServiceChat({
     return () => clearInterval(interval);
   }, [isOpen, fetchMessages]);
 
+  // Listener event perubahan pesan CS (misal saat dihapus dari dashboard)
+  useEffect(() => {
+    const handleChanged = () => {
+      fetchMessages();
+    };
+    window.addEventListener('csMessagesChanged', handleChanged);
+    return () => window.removeEventListener('csMessagesChanged', handleChanged);
+  }, [fetchMessages]);
+
+  // ─── Delete Actions (Khusus Admin) ──────────────────────────────────────────
+  const handleDeleteMessage = async (msgId: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Hapus pesan ini dari riwayat chat?')) return;
+
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    try {
+      const res = await fetch(`${API}/cs/messages/${msgId}`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (res.ok) {
+        setMessages((prev) => prev.filter((m) => m.id !== msgId));
+        window.dispatchEvent(new CustomEvent('csMessagesChanged'));
+        await fetchMessages();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Hapus seluruh riwayat percakapan pada sesi ini agar notifikasi tidak menumpuk?')) return;
+
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    try {
+      const res = await fetch(`${API}/cs/sessions/${encodeURIComponent(sessionId)}`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (res.ok) {
+        if (activeSessionId === sessionId) {
+          setActiveSessionId('');
+          setTargetNews(null);
+        }
+        setAllSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
+        window.dispatchEvent(new CustomEvent('csMessagesChanged'));
+        await fetchMessages();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleClearAllChats = async () => {
+    if (!window.confirm('Hapus seluruh chat masuk dari semua pengguna agar notifikasi bersih?')) return;
+
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    try {
+      const res = await fetch(`${API}/cs/clear-all`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (res.ok) {
+        setActiveSessionId('');
+        setTargetNews(null);
+        setAllSessions([]);
+        setMessages([]);
+        window.dispatchEvent(new CustomEvent('csMessagesChanged'));
+        await fetchMessages();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   // Scroll to bottom
   useEffect(() => {
     if (isOpen && activeSessionId) {
@@ -436,6 +521,16 @@ export function CustomerServiceChat({
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
+              {isAdmin && activeSessionId && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSession(activeSessionId)}
+                  title="Hapus Seluruh Percakapan Sesi Ini"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={async () => {
@@ -495,7 +590,17 @@ export function CustomerServiceChat({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
                   Daftar Pesan Masuk ({allSessions.length})
                 </span>
-                <span className="text-[11px] text-stone-400">Pilih untuk membalas</span>
+                {allSessions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllChats}
+                    className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                    title="Hapus seluruh riwayat chat pengguna agar notifikasi tidak menumpuk"
+                  >
+                    <Trash2 size={11} />
+                    <span>Hapus Semua</span>
+                  </button>
+                )}
               </div>
 
               {allSessions.length === 0 ? (
@@ -560,11 +665,22 @@ export function CustomerServiceChat({
                     )}
 
                     <p className="text-stone-600 dark:text-stone-300 text-xs line-clamp-2">
-                      "{sess.lastMessage}"
+                      &quot;{sess.lastMessage}&quot;
                     </p>
 
-                    <div className="pt-1 flex items-center justify-end text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400">
-                      <span>Buka & Balas Percakapan &rarr;</span>
+                    <div className="pt-1.5 flex items-center justify-between border-t border-stone-100 dark:border-zinc-700/60 mt-1">
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteSession(sess.sessionId, e)}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 py-0.5 rounded transition-colors cursor-pointer"
+                        title="Hapus chat sesi ini agar tidak menumpuk"
+                      >
+                        <Trash2 size={11} />
+                        <span>Hapus Sesi</span>
+                      </button>
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 dark:text-orange-400">
+                        <span>Buka & Balas &rarr;</span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -614,6 +730,16 @@ export function CustomerServiceChat({
                           </span>
                         )}
                         <span>&bull; {timeStr}</span>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteMessage(msg.id, e)}
+                            className="ml-1 text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-0.5 rounded cursor-pointer"
+                            title="Hapus pesan ini"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
                       </div>
 
                       <div
