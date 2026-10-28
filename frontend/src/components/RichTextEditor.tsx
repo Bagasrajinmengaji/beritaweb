@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 
 export interface RichTextEditorProps {
   /** The current HTML content */
@@ -21,8 +21,8 @@ export interface RichTextEditorProps {
   className?: string;
 }
 
-// ─── 1. SSR-Safe Dynamic Import with Next.js ──────────────────────────────────
-const ReactQuill = dynamic(() => import('react-quill'), {
+// ─── 1. SSR-Safe Dynamic Import with Next.js (React 19 Compatible) ─────────────
+const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
   loading: () => (
     <div className="min-h-[420px] w-full rounded-xl border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-900/40 p-6 flex flex-col items-center justify-center gap-3 animate-pulse">
