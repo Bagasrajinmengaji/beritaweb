@@ -1,0 +1,413 @@
+{
+  "info": {
+    "_postman_id": "portal-berita-api-collection",
+    "name": "Portal Berita API",
+    "description": "Koleksi endpoint API Portal Berita Web dengan otomatisasi penyimpanan Token Sanctum.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Otomatisasi Menyimpan Token Sanctum",
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.token) {",
+                  "        pm.environment.set(\"token\", res.token);",
+                  "        pm.collectionVariables.set(\"token\", res.token);",
+                  "        console.log(\"✅ Token berhasil disimpan otomatis dari Register:\", res.token);",
+                  "    }",
+                  "    if (res.user) {",
+                  "        pm.environment.set(\"user_role\", res.user.role || \"\");",
+                  "        pm.environment.set(\"user_name\", res.user.name || \"\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bagas Pramono\",\n  \"username\": \"bagaspramono\",\n  \"email\": \"bagas@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": ["{{base_url}}"],
+              "path": ["register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Otomatisasi Menyimpan Token Sanctum",
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.token) {",
+                  "        pm.environment.set(\"token\", res.token);",
+                  "        pm.collectionVariables.set(\"token\", res.token);",
+                  "        console.log(\"✅ Token berhasil disimpan otomatis dari Login:\", res.token);",
+                  "    }",
+                  "    if (res.user) {",
+                  "        pm.environment.set(\"user_role\", res.user.role || \"\");",
+                  "        pm.environment.set(\"user_name\", res.user.name || \"\");",
+                  "        console.log(\"✅ Akun login sebagai role:\", res.user.role);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"bagaspramono\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": ["{{base_url}}"],
+              "path": ["me"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.set(\"token\", \"\");",
+                  "    pm.collectionVariables.set(\"token\", \"\");",
+                  "    console.log(\"🔒 Token telah dikosongkan setelah logout.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. News",
+      "item": [
+        {
+          "name": "Get All News",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/news",
+              "host": ["{{base_url}}"],
+              "path": ["news"]
+            }
+          }
+        },
+        {
+          "name": "Create News",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.id) {",
+                  "        pm.environment.set(\"news_id\", res.data.id);",
+                  "        console.log(\"✅ ID Berita baru tersimpan:\", res.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Perkembangan Teknologi Modern 2026", "type": "text" },
+                { "key": "author", "value": "Bagas Pramono", "type": "text" },
+                { "key": "content", "value": "<p>Isi artikel berita lengkap di sini...</p>", "type": "text" },
+                { "key": "image", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/news",
+              "host": ["{{base_url}}"],
+              "path": ["news"]
+            }
+          }
+        },
+        {
+          "name": "Get Detail News",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/news/{{news_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["news", "{{news_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update News",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "_method", "value": "PUT", "type": "text" },
+                { "key": "title", "value": "Perkembangan Teknologi Modern 2026 (Update)", "type": "text" },
+                { "key": "content", "value": "<p>Konten artikel telah direvisi...</p>", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/news/{{news_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["news", "{{news_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete News",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/news/{{news_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["news", "{{news_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Customer Service & Notifikasi",
+      "item": [
+        {
+          "name": "Kirim Pesan CS / Permohonan Hapus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.id) {",
+                  "        pm.environment.set(\"msg_id\", res.data.id);",
+                  "        console.log(\"✅ ID Pesan chat tersimpan:\", res.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Halo Admin, saya ingin mengajukan permohonan penghapusan artikel.\",\n  \"news_id\": {{news_id}},\n  \"news_title\": \"Judul Berita\",\n  \"session_id\": \"{{session_id}}\",\n  \"user_name\": \"{{user_name}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cs/messages",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Get CS Messages & Notifikasi (Admin/User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cs/messages",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Admin Balas Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Permohonan Anda telah kami tindak lanjuti.\",\n  \"session_id\": \"{{session_id}}\",\n  \"as_admin\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cs/messages",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Tandai Chat Sudah Dibaca",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"{{session_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cs/mark-as-read",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "mark-as-read"]
+            }
+          }
+        },
+        {
+          "name": "Hapus 1 Pesan Chat Spesifik",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cs/messages/{{msg_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "messages", "{{msg_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Hapus Sesi Percakapan Pengguna",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cs/sessions/{{session_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "sessions", "{{session_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Hapus Semua Chat (Bersihkan Notifikasi Menumpuk)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope\": \"all\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cs/clear-all",
+              "host": ["{{base_url}}"],
+              "path": ["cs", "clear-all"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

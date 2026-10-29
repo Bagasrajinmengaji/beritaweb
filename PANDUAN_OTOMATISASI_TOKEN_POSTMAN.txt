@@ -1,0 +1,101 @@
+================================================================================
+   PANDUAN OTOMATISASI TOKEN SANCTUM DI POSTMAN (PORTAL BERITA WEB)
+================================================================================
+
+Terdapat 2 cara mudah untuk menggunakan otomatisasi token ini:
+- CARA 1 (Paling Praktis): Import file Collection & Environment yang sudah jadi.
+- CARA 2 (Manual): Memasang script ke request Login / Register yang sudah Anda miliki.
+
+--------------------------------------------------------------------------------
+CARA 1: IMPORT FILE SIAP PAKAI (REKOMENDASI 1-KLIK)
+--------------------------------------------------------------------------------
+Kami telah membuatkan 2 file konfigurasi siap pakai di folder proyek Anda:
+1. c:\beritaweb\Portal_Berita_Postman_Collection.json (Daftar semua endpoint)
+2. c:\beritaweb\Portal_Berita_Postman_Environment.json (Variabel base_url & token)
+
+Langkah Import ke Postman:
+1. Buka aplikasi Postman.
+2. Klik tombol "Import" (di kiri atas samping nama workspace).
+3. Seret (drag & drop) atau pilih kedua file JSON di atas:
+   - Portal_Berita_Postman_Collection.json
+   - Portal_Berita_Postman_Environment.json
+4. Di pojok kanan atas Postman, ganti dropdown Environment dari "No Environment" 
+   menjadi "Portal Berita Local Env".
+5. Selesai! Kini setiap kali Anda menjalankan request "Login" atau "Register User",
+   token Sanctum otomatis tersimpan dan seluruh request lain (seperti Create News,
+   Delete News, Chat Admin) langsung terautentikasi otomatis tanpa copy-paste manual.
+
+--------------------------------------------------------------------------------
+CARA 2: MEMASANG SCRIPT OTOMATISASI SECARA MANUAL
+--------------------------------------------------------------------------------
+Jika Anda sudah memiliki request di Postman dan hanya ingin menambahkan script
+otomatisasi penyimpan token:
+
+Langkah A — Pasang Script di Request LOGIN & REGISTER:
+1. Buka request "POST /api/login" atau "POST /api/register".
+2. Di bawah baris URL, klik tab "Tests" (di versi Postman terbaru namanya "Scripts" -> sub-tab "Post-response").
+3. Tempelkan script JavaScript berikut:
+
+```javascript
+// Cek jika response status code 200 (OK) atau 201 (Created)
+if (pm.response.code === 200 || pm.response.code === 201) {
+    const res = pm.response.json();
+    
+    // 1. Simpan token ke Environment Variable
+    if (res.token) {
+        pm.environment.set("token", res.token);
+        pm.collectionVariables.set("token", res.token);
+        console.log("✅ Token Sanctum otomatis disimpan:", res.token);
+    }
+    
+    // 2. Simpan role & nama user (opsional untuk kemudahan)
+    if (res.user) {
+        pm.environment.set("user_role", res.user.role || "");
+        pm.environment.set("user_name", res.user.name || "");
+        console.log("✅ Login sebagai user:", res.user.name, "| Role:", res.user.role);
+    }
+}
+```
+
+4. Klik tombol "Save" (Ctrl + S).
+
+Langkah B — Pasang Script di Request LOGOUT (Mengosongkan Token Saat Keluar):
+1. Buka request "POST /api/logout".
+2. Buka tab "Tests" (atau "Scripts" -> "Post-response").
+3. Tempelkan script berikut:
+
+```javascript
+if (pm.response.code === 200) {
+    pm.environment.set("token", "");
+    pm.collectionVariables.set("token", "");
+    console.log("🔒 Token berhasil dikosongkan setelah logout.");
+}
+```
+
+Langkah C — Konfigurasi Authorization Koleksi (Agar Otomatis Terhubung):
+1. Klik nama Collection Anda (misal "Portal Berita API") di bilah kiri.
+2. Buka tab "Authorization".
+3. Pilih Type: "Bearer Token".
+4. Pada kolom Token, isi dengan:
+   {{token}}
+5. Klik "Save" (Ctrl + S).
+6. Di setiap request yang membutuhkan auth, cukup pastikan tab Authorization di-set ke:
+   "Inherit auth from parent".
+
+--------------------------------------------------------------------------------
+CARA KERJA OTOMATISASINYA:
+--------------------------------------------------------------------------------
+1. Anda klik "Send" pada request Login.
+2. Laravel merespon dengan JSON:
+   {
+     "message": "Login berhasil.",
+     "token": "12|Xk89F12...",
+     "user": { ... }
+   }
+3. Tab "Tests" membaca properti `res.token`, lalu menyimpannya ke variabel `{{token}}`.
+4. Saat Anda membuka request "Create News", "Delete News", atau "Admin Chat",
+   Postman otomatis menyisipkan header:
+   Authorization: Bearer 12|Xk89F12...
+5. Anda tidak perlu lagi melakukan copy-paste token selamanya!
+================================================================================
+
