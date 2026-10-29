@@ -26,21 +26,66 @@ class AuthController extends Controller
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Exception $e) {
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-            return redirect($frontendUrl . '/?error=google_auth_failed');
+            return redirect($frontendUrl . '/login?error=google_auth_failed');
         }
 
-        // Cari/buat user berdasarkan email, update data Google
-        $user = User::updateOrCreate(
-            ['email' => $googleUser->getEmail()],
-            [
-                'name'      => $googleUser->getName(),
-                'google_id' => $googleUser->getId(),
-                'avatar'    => $googleUser->getAvatar(),
-                'password'  => null,
-            ]
-        );
+        $googleEmail  = strtolower(trim($googleUser->getEmail()));
+        $googleId     = (string) $googleUser->getId();
+        $googleName   = $googleUser->getName() ?: 'Pengguna Google';
+        $googleAvatar = $googleUser->getAvatar();
 
-        // Hapus token lama agar tidak menumpuk (opsional)
+        // Cari user berdasarkan email
+        $user = User::where('email', $googleEmail)->first();
+
+        if ($user) {
+            // Update identitas Google tanpa menghapus password atau role yang sudah ada!
+            $updateData = [
+                'google_id' => $googleId,
+            ];
+
+            if ($googleAvatar && empty($user->avatar)) {
+                $updateData['avatar'] = $googleAvatar;
+            }
+
+            // Jika username masih kosong, buatkan username unik otomatis
+            if (empty($user->username)) {
+                $baseUsername = strtolower(preg_replace('/[^a-z0-9_]/', '', explode('@', $googleEmail)[0]));
+                if (strlen($baseUsername) < 3) {
+                    $baseUsername = 'user_' . substr(md5($googleEmail), 0, 6);
+                }
+                $username = $baseUsername;
+                $counter = 1;
+                while (User::where('username', $username)->where('id', '!=', $user->id)->exists()) {
+                    $username = $baseUsername . $counter++;
+                }
+                $updateData['username'] = $username;
+            }
+
+            $user->update($updateData);
+        } else {
+            // Buat user baru dari Google dengan username unik
+            $baseUsername = strtolower(preg_replace('/[^a-z0-9_]/', '', explode('@', $googleEmail)[0]));
+            if (strlen($baseUsername) < 3) {
+                $baseUsername = 'user_' . substr(md5($googleEmail), 0, 6);
+            }
+            $username = $baseUsername;
+            $counter = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = $baseUsername . $counter++;
+            }
+
+            $user = User::create([
+                'name'      => $googleName,
+                'username'  => $username,
+                'email'     => $googleEmail,
+                'google_id' => $googleId,
+                'avatar'    => $googleAvatar,
+                'role'      => 'user',
+                'password'  => null,
+            ]);
+        }
+
+        // Hapus token google-auth lama agar tidak menumpuk
         $user->tokens()->where('name', 'google-auth')->delete();
 
         // Buat Sanctum Personal Access Token
@@ -60,21 +105,40 @@ class AuthController extends Controller
     }
 
     /**
-     * Login menggunakan username dan password.
+     * Login menggunakan username atau email dan password.
      */
     public function login(Request $request)
     {
         $validated = $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
+        ], [
+            'username.required' => 'Username atau email wajib diisi.',
+            'password.required' => 'Password wajib diisi.',
         ]);
 
-        // Cari user berdasarkan username ATAU email
-        $user = User::where('username', $validated['username'])
-            ->orWhere('email', $validated['username'])
+        $identifier = trim($validated['username']);
+        $password   = $validated['password'];
+
+        // Cari user berdasarkan username (case-insensitive) ATAU email (case-insensitive)
+        $user = User::whereRaw('LOWER(username) = ?', [strtolower($identifier)])
+            ->orWhereRaw('LOWER(email) = ?', [strtolower($identifier)])
             ->first();
 
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (!$user) {
+            return response()->json([
+                'message' => 'Username atau password salah.',
+            ], 401);
+        }
+
+        // Jika user terdaftar via Google SSO dan belum memiliki password
+        if (empty($user->password)) {
+            return response()->json([
+                'message' => 'Akun ini terdaftar menggunakan Google. Silakan masuk menggunakan tombol Google SSO.',
+            ], 422);
+        }
+
+        if (!Hash::check($password, $user->password)) {
             return response()->json([
                 'message' => 'Username atau password salah.',
             ], 401);
@@ -106,6 +170,10 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
         return response()->json([
             'id'         => $user->id,
             'name'       => $user->name,
@@ -141,10 +209,14 @@ class AuthController extends Controller
             'password.min'        => 'Password minimal harus 6 karakter.',
         ]);
 
+        $cleanUsername = strtolower(trim($validated['username']));
+        $cleanEmail    = strtolower(trim($validated['email']));
+        $cleanName     = trim($validated['name']);
+
         $user = User::create([
-            'name'     => $validated['name'],
-            'username' => strtolower($validated['username']),
-            'email'    => strtolower($validated['email']),
+            'name'     => $cleanName,
+            'username' => $cleanUsername,
+            'email'    => $cleanEmail,
             'password' => Hash::make($validated['password']),
             'role'     => 'user',
         ]);
@@ -171,7 +243,11 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if ($user && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+        }
+
         return response()->json(['message' => 'Berhasil logout']);
     }
 }

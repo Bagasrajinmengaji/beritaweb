@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Alias middleware untuk proteksi rute admin web
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
+
         // Kecualikan endpoint API dari pengecekan CSRF token (menggunakan Sanctum Bearer Token)
         $middleware->validateCsrfTokens(except: [
             'api/*',

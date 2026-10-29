@@ -127,3 +127,48 @@ test('registration validates duplicate username or email', function () {
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['username']);
 });
+
+test('login notifies user if account was created with google and has no password', function () {
+    User::create([
+        'name'      => 'Google User',
+        'username'  => 'googleuser',
+        'email'     => 'google@example.com',
+        'google_id' => '1234567890',
+        'password'  => null,
+        'role'      => 'user',
+    ]);
+
+    $response = $this->postJson('/api/login', [
+        'username' => 'google@example.com',
+        'password' => 'secret123',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'message' => 'Akun ini terdaftar menggunakan Google. Silakan masuk menggunakan tombol Google SSO.',
+        ]);
+});
+
+test('login works with mixed-case email or username', function () {
+    User::create([
+        'name'     => 'Test User',
+        'username' => 'testuser',
+        'email'    => 'test@example.com',
+        'password' => Hash::make('password123'),
+        'role'     => 'user',
+    ]);
+
+    $response = $this->postJson('/api/login', [
+        'username' => 'TeSt@ExAmPlE.cOm ',
+        'password' => 'password123',
+    ]);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'message' => 'Login berhasil.',
+            'user'    => [
+                'username' => 'testuser',
+                'email'    => 'test@example.com',
+            ],
+        ]);
+});
