@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Sun, Moon, LogOut, LogIn, UserPlus, PenLine } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
@@ -219,15 +219,6 @@ export function Navbar() {
             {/* ── Sudah Login ── */}
             {mounted && user && (
               <>
-                {/* Tulis berita CTA */}
-                <Link
-                  href="/create"
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-2 text-sm font-semibold active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 shadow-sm"
-                >
-                  <PenLine size={14} aria-hidden="true" />
-                  Tulis Berita
-                </Link>
-
                 {/* Avatar + dropdown trigger */}
                 <div className="relative group">
                   <button

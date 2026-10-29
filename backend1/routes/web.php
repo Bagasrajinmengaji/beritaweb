@@ -14,9 +14,9 @@ use App\Http\Controllers\Admin\AdminCustomerServiceController;
 | dan integrasi ke Frontend Next.js di http://localhost:3000.
 */
 
-// Root URL Backend (http://localhost:8000) otomatis mengarahkan ke Frontend Pembaca
+// Root URL Backend (http://localhost:8000) otomatis mengarahkan ke Admin Panel Backend
 Route::get('/', function () {
-    return redirect('http://localhost:3000');
+    return redirect()->route('admin.dashboard');
 });
 
 // ─── Admin Authentication (Guest Only) ───────────────────────────────────────
