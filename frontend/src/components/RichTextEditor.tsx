@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import dynamic from 'next/dynamic';
-import 'react-quill-new/dist/quill.snow.css';
+import React, { useMemo } from "react";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
 
 export interface RichTextEditorProps {
   /** The current HTML content */
@@ -22,7 +22,7 @@ export interface RichTextEditorProps {
 }
 
 // ─── 1. SSR-Safe Dynamic Import with Next.js (React 19 Compatible) ─────────────
-const ReactQuill = dynamic(() => import('react-quill-new'), {
+const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
   loading: () => (
     <div className="min-h-[420px] w-full rounded-xl border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-900/40 p-6 flex flex-col items-center justify-center gap-3 animate-pulse">
@@ -40,51 +40,50 @@ export function RichTextEditor({
   value,
   content,
   onChange,
-  placeholder = 'Tulis naskah berita lengkap di sini...',
+  placeholder = "Tulis naskah berita lengkap di sini...",
   disabled = false,
   hasError = false,
-  className = '',
+  className = "",
 }: RichTextEditorProps) {
-  const currentContent = value ?? content ?? '';
+  const currentContent = value ?? content ?? "";
 
   // ─── 2. Newsroom Toolbar & Modules Configuration ────────────────────────────
   const modules = useMemo(
     () => ({
       toolbar: [
         [{ header: [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
+        ["bold", "italic", "underline", "strike"],
         [{ align: [] }], // Text Alignment: left, center, right, justify
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['blockquote', 'link', 'image'],
-        ['clean'],
+        [{ list: "ordered" }, { list: "bullet" }],
+        ["blockquote", "link", "image"],
+        ["clean"],
       ],
       clipboard: {
         matchVisual: false,
       },
     }),
-    []
+    [],
   );
 
   const formats = [
-    'header',
-    'bold',
-    'italic',
-    'underline',
-    'strike',
-    'align',
-    'list',
-    'bullet',
-    'blockquote',
-    'link',
-    'image',
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "align",
+    "list",
+    "blockquote",
+    "link",
+    "image",
   ];
 
   return (
     <div
       className={`react-quill-newsroom relative w-full rounded-xl overflow-hidden transition-all duration-200 ${
         hasError
-          ? 'ring-2 ring-rose-500 border border-rose-500'
-          : 'focus-within:ring-2 focus-within:ring-orange-500/20'
+          ? "ring-2 ring-rose-500 border border-rose-500"
+          : "focus-within:ring-2 focus-within:ring-orange-500/20"
       } ${className}`}
     >
       <ReactQuill
@@ -181,7 +180,7 @@ export function RichTextEditor({
           border-color: #27272a;
           color: #f4f4f5;
         }
-        .dark .react-quill-newsroom .ql-snow .ql-tooltip input[type='text'] {
+        .dark .react-quill-newsroom .ql-snow .ql-tooltip input[type="text"] {
           background-color: #27272a;
           border-color: #3f3f46;
           color: #f4f4f5;
