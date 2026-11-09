@@ -1,0 +1,334 @@
+================================================================================
+PANDUAN PENGUJIAN API DENGAN POSTMAN
+PORTAL INFORMASI LOMBA MAHASISWA UMPKU SURAKARTA
+================================================================================
+
+Base URL API: http://127.0.0.1:8000/api
+Base URL Web: http://127.0.0.1:8000
+
+--------------------------------------------------------------------------------
+1. KONFIGURASI ENVIRONMENT POSTMAN (RECOMMENDED)
+--------------------------------------------------------------------------------
+Buat Environment di Postman dengan variabel berikut:
+- base_url : http://127.0.0.1:8000/api
+- token    : (Kosongkan dulu, akan diisi otomatis / manual setelah login)
+
+Header Global yang harus diset pada setiap request JSON:
+- Accept       : application/json
+- Content-Type : application/json (Khusus form upload gambar gunakan multipart/form-data)
+- Authorization: Bearer {{token}} (Untuk endpoint terproteksi auth:sanctum)
+
+
+================================================================================
+2. AUTENTIKASI (AUTH & USER ACCOUNT)
+================================================================================
+
+[POST] 1. Registrasi Mahasiswa Baru
+URL: {{base_url}}/register
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "name": "Budi Santoso",
+  "username": "budisantoso",
+  "email": "budi@students.umpku.ac.id",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+Expected Response: 201 Created
+(Salin nilai "token" dari respons untuk digunakan di request berikutnya).
+
+---
+
+[POST] 2. Login Mahasiswa / Pengguna
+URL: {{base_url}}/login
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "username": "budisantoso",
+  "password": "password123"
+}
+Expected Response: 200 OK
+{
+  "message": "Login berhasil",
+  "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "user": { ... }
+}
+*Note: Salin token ke environment {{token}}.
+
+---
+
+[GET] 3. Profil Pengguna Aktif (Me)
+URL: {{base_url}}/me
+Headers:
+  Accept: application/json
+  Authorization: Bearer {{token}}
+Expected Response: 200 OK
+
+---
+
+[POST] 4. Logout Pengguna Aktif
+URL: {{base_url}}/logout
+Headers:
+  Accept: application/json
+  Authorization: Bearer {{token}}
+Expected Response: 200 OK
+
+
+================================================================================
+3. MASTER DATA PUBLIK (KATEGORI & PROGRAM STUDI)
+================================================================================
+
+[GET] 5. Ambil Semua Kategori Lomba
+URL: {{base_url}}/categories
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+---
+
+[GET] 6. Ambil Detail Kategori berdasarkan Slug
+URL: {{base_url}}/categories/teknologi-informasi-ai
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+---
+
+[GET] 7. Ambil Semua Program Studi UMPKU Surakarta (9 Prodi)
+URL: {{base_url}}/study-programs
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+---
+
+[GET] 8. Ambil Detail Program Studi berdasarkan Slug
+URL: {{base_url}}/study-programs/s1-informatika
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+
+================================================================================
+4. KATALOG PUBLIK LOMBA (HANYA STATUS 'APPROVED')
+================================================================================
+
+[GET] 9. Ambil Daftar Lomba Publik (Tanpa Filter)
+URL: {{base_url}}/competitions
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+---
+
+[GET] 10. Ambil Daftar Lomba dengan Multi-Filter & Search
+URL: {{base_url}}/competitions?search=Hackathon&category=teknologi-informasi-ai&study_program=s1-informatika&level=Nasional&deadline_status=open&sort=deadline_asc&page=1&per_page=10
+Headers:
+  Accept: application/json
+Parameter Query yang didukung:
+  - search          : kata kunci judul/penyelenggara
+  - category        : slug kategori (contoh: bisnis-kewirausahaan)
+  - study_program   : slug prodi (contoh: s1-informatika)
+  - level           : Internasional | Nasional | Provinsi | Regional | Internal Kampus
+  - deadline_status : open (masih buka) | soon (segera ditutup <= 7 hari) | closed (tutup)
+  - sort            : latest | deadline_asc | title_asc
+  - per_page        : jumlah per halaman (default 12)
+Expected Response: 200 OK
+
+---
+
+[GET] 11. Ambil Detail Lomba Publik berdasarkan Slug
+URL: {{base_url}}/competitions/hackathon-nasional-umpku-2026
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+
+================================================================================
+5. PENGAJUAN & DASHBOARD MAHASISWA (PROTECTED SANCTUM)
+================================================================================
+
+[POST] 12. Ajukan Lomba Baru oleh Mahasiswa (JSON Format)
+URL: {{base_url}}/competitions
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+Body (raw JSON):
+{
+  "title": "National UI/UX Design Competition 2026",
+  "category_id": 1,
+  "organizer": "BEM Fakultas Ilmu Komputer",
+  "competition_level": "Nasional",
+  "registration_deadline": "2026-12-31",
+  "registration_fee": "Gratis",
+  "registration_url": "https://umpku.ac.id/lomba-uiux",
+  "source_url": "https://instagram.com/p/uiuxdesign2026",
+  "contact": "081234567890 (Admin Panitia)",
+  "description": "Kompetisi desain antarmuka aplikasi digital untuk mahasiswa aktif seluruh Indonesia tingkat nasional.",
+  "requirements": "1. Mahasiswa aktif D3/D4/S1\n2. Karya orisinal belum pernah juara\n3. Pengumpulan via link Figma",
+  "study_program_ids": [1, 2, 3]
+}
+Expected Response: 201 Created (status: "pending")
+
+---
+
+[POST] 13. Ajukan Lomba Baru dengan Upload Poster Gambar (form-data)
+URL: {{base_url}}/competitions
+Headers:
+  Accept: application/json
+  Authorization: Bearer {{token}}
+Body (form-data):
+  - title                 : (Text) National Web Development Challenge 2026
+  - category_id           : (Text) 1
+  - organizer             : (Text) Himpunan Mahasiswa
+  - competition_level     : (Text) Nasional
+  - registration_deadline : (Text) 2026-12-30
+  - registration_fee      : (Text) Rp 50.000
+  - registration_url      : (Text) https://umpku.ac.id/webdev
+  - source_url            : (Text) https://instagram.com/p/webdev2026
+  - description           : (Text) Lomba pembuatan website inovatif bertema Smart Campus UMPKU.
+  - requirements          : (Text) Mahasiswa aktif beregu 2-3 orang.
+  - study_program_ids[0]  : (Text) 1
+  - study_program_ids[1]  : (Text) 2
+  - poster                : (File) [Pilih file poster .jpg / .png / .webp maksimal 3MB]
+Expected Response: 201 Created (Otomatis dikonversi ke WebP)
+
+---
+
+[GET] 14. Ambil Daftar Lomba Milik Sendiri (Dashboard Mahasiswa)
+URL: {{base_url}}/my/competitions?status=all
+Headers:
+  Accept: application/json
+  Authorization: Bearer {{token}}
+Parameter Query:
+  - status: all | pending | approved | rejected
+Expected Response: 200 OK (Menampilkan data lomba beserta 'rejection_reason' jika ada)
+
+---
+
+[GET] 15. Ambil Detail Lomba Milik Sendiri berdasarkan ID
+URL: {{base_url}}/my/competitions/1
+Headers:
+  Accept: application/json
+  Authorization: Bearer {{token}}
+Expected Response: 200 OK
+
+---
+
+[PUT] 16. Update / Revisi Lomba Milik Sendiri (Resubmit)
+URL: {{base_url}}/competitions/1
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+Body (raw JSON):
+{
+  "title": "National UI/UX Design Competition 2026 (Revisi)",
+  "category_id": 1,
+  "organizer": "BEM Fakultas Ilmu Komputer",
+  "competition_level": "Nasional",
+  "registration_deadline": "2026-12-31",
+  "registration_fee": "Gratis",
+  "registration_url": "https://umpku.ac.id/lomba-uiux-revisi",
+  "source_url": "https://instagram.com/p/uiuxdesign2026",
+  "contact": "081234567890",
+  "description": "Kompetisi desain antarmuka aplikasi digital untuk mahasiswa aktif seluruh Indonesia (Telah diperbaiki).",
+  "requirements": "1. Mahasiswa aktif\n2. Karya orisinal",
+  "study_program_ids": [1, 2]
+}
+Expected Response: 200 OK (Status otomatis reset ke 'pending' & rejection_reason dibersihkan)
+
+---
+
+[DELETE] 17. Hapus Lomba Milik Sendiri
+URL: {{base_url}}/competitions/1
+Headers:
+  Accept: application/json
+  Authorization: Bearer {{token}}
+Expected Response: 200 OK
+
+
+================================================================================
+6. CUSTOMER SERVICE & LIVE SUPPORT DUA ARAH
+================================================================================
+
+[GET] 18. Ambil Riwayat Pesan CS
+URL: {{base_url}}/cs/messages?session_id=session_mahasiswa_123
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+---
+
+[POST] 19. Kirim Pesan Bantuan CS (Terkait Lomba)
+URL: {{base_url}}/cs/messages
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "session_id": "session_mahasiswa_123",
+  "user_name": "Budi Santoso",
+  "user_email": "budi@students.umpku.ac.id",
+  "competition_id": 1,
+  "competition_title": "National UI/UX Design Competition 2026",
+  "message": "Halo Admin Kemahasiswaan, bagaimana cara konfirmasi berkas pendaftaran lomba ini?"
+}
+Expected Response: 201 Created
+
+---
+
+[POST] 20. Tandai Pesan CS Telah Dibaca
+URL: {{base_url}}/cs/mark-as-read
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "session_id": "session_mahasiswa_123",
+  "role": "user"
+}
+Expected Response: 200 OK
+
+
+================================================================================
+7. LEGACY NEWS (ARTIKEL BERITA - TETAP DIPERTAHANKAN)
+================================================================================
+
+[GET] 21. Ambil Semua Berita
+URL: {{base_url}}/news
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+---
+
+[GET] 22. Ambil Detail Berita
+URL: {{base_url}}/news/1
+Headers:
+  Accept: application/json
+Expected Response: 200 OK
+
+
+================================================================================
+8. ALUR PENGUJIAN END-TO-END (REKOMENDASI SKENARIO LENGKAP)
+================================================================================
+Langkah Pengujian Berurutan:
+1. Jalankan Request #2 (Login sebagai Mahasiswa), simpan token.
+2. Jalankan Request #12 (Submit Lomba Baru) -> Cek status "pending".
+3. Jalankan Request #9 (Katalog Publik) -> Pastikan lomba TIDAK MUNCUL.
+4. Buka Browser ke http://127.0.0.1:8000/admin (Login Admin Kemahasiswaan).
+5. Pada menu Moderasi Lomba, klik "Setujui" pada lomba tadi.
+6. Jalankan Request #9 lagi -> Lomba SEKARANG MUNCUL di katalog publik.
+7. Di admin, coba tolak lomba dengan alasan: "Tautan pendaftaran error".
+8. Jalankan Request #14 (Dashboard Mahasiswa) -> Status menjadi "rejected" dan menampilkan alasan penolakan.
+9. Jalankan Request #16 (Mahasiswa submit revisi) -> Status otomatis kembali "pending" dan siap direview ulang.
+
+Selesai. Seluruh API telah terverifikasi 100% lulus uji.
+================================================================================
+

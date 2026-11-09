@@ -1,0 +1,154 @@
+================================================================================
+DAFTAR LENGKAP FITUR WEBSITE
+PORTAL INFORMASI LOMBA MAHASISWA UMPKU SURAKARTA
+================================================================================
+Versi: 2.0 (Transformed Portal Lomba Mahasiswa)
+Tech Stack: Next.js 16 (App Router) + Laravel 11 (REST API & Blade Admin Panel)
+Institusi : Universitas Muhammadiyah PKU (UMPKU) Surakarta
+================================================================================
+
+--------------------------------------------------------------------------------
+1. FITUR PENGUNJUNG PUBLIK (NEXT.JS - HTTP://LOCALHOST:3000)
+--------------------------------------------------------------------------------
+A. Beranda Portal (Homepage - `/`):
+   1. Hero Banner UMPKU Surakarta:
+      - Desain modern bernuansa akademis oranye-navy.
+      - Ajakan aksi langsung: Eksplorasi Lomba dan Tambah Lomba.
+      - Fitur Quick Search langsung dari Hero section.
+   2. Quick Category Pills:
+      - Baris kategori interaktif dengan badge ikon untuk akses cepat per bidang.
+   3. Section "Segera Ditutup" (Deadline Mendekat):
+      - Menampilkan lomba-lomba yang batas pendaftarannya <= 7 hari lagi.
+      - Menggunakan kartu sorotan dengan badge sisa hari menyala.
+   4. Section "Lomba Terbaru":
+      - Menampilkan grid kartu lomba yang baru saja disetujui kurator admin.
+   5. CTA Banner Mahasiswa:
+      - Panduan dan ajakan berkontribusi mempublikasikan info lomba bereputasi.
+
+B. Halaman Katalog Lomba (`/lomba`):
+   6. Real-time Search Engine:
+      - Pencarian instan berdasarkan judul lomba, penyelenggara, dan deskripsi.
+   7. Multi-Parameter Filtering System:
+      - Filter Program Studi (Disesuaikan dengan 9 Prodi UMPKU).
+      - Filter Kategori Lomba (Teknologi, Medis/Kesehatan, Bisnis, Seni, Sains, dll).
+      - Filter Tingkatan Kompetisi (Internal Kampus, Regional, Provinsi, Nasional, Internasional).
+      - Filter Status Pendaftaran (Pendaftaran Buka, Segera Ditutup, Pendaftaran Ditutup).
+   8. Sorting & Pagination Dinamis:
+      - Pilihan urutan: Terbaru, Deadline Terdekat, dan Abjad (A-Z).
+      - Navigasi halaman (Pagination) sinkron dengan URL browser (`searchParams`).
+
+C. Halaman Detail Lomba (`/lomba/[slug]`):
+   9. Layout 2 Kolom Komprehensif:
+      - Kolom Utama: Poster resolusi tinggi, deskripsi lengkap, persyaratan, dan prodi yang relevan.
+      - Sidebar Aksi: Tombol pendaftaran resmi, status deadline, penyelenggara, biaya, kontak, dan tautan sumber.
+   10. Web Speech API Audio Reader:
+      - Fitur aksesibilitas pembaca suara otomatis dalam Bahasa Indonesia untuk mendengarkan deskripsi lomba tanpa harus membaca teks panjang.
+   11. Smart Deadline Status Badge:
+      - Badge "Pendaftaran Ditutup" berstatus tegas dengan warna **MERAH**.
+      - Badge "Segera Ditutup" berwarna oranye dengan hitung mundur sisa hari.
+      - Badge "Pendaftaran Buka" berwarna hijau dengan informasi sisa hari.
+   12. Social Share Action:
+      - Tombol salin tautan cepat (Copy Link) untuk membagikan info lomba ke WhatsApp grup mahasiswa.
+
+--------------------------------------------------------------------------------
+2. FITUR MAHASISWA / PENGGUNA TERDAFTAR (NEXT.JS)
+--------------------------------------------------------------------------------
+A. Alur Autentikasi:
+   13. Multi-Method Authentication:
+      - Registrasi akun mahasiswa baru (`/register`).
+      - Login akun username / email & password (`/login`).
+      - Google OAuth SSO One-Click Login via Laravel Socialite.
+      - Proteksi API berbasis token Laravel Sanctum.
+
+B. Multi-Step Form Pengajuan Lomba (`/lomba/tambah`):
+   14. Wizard Form 3 Langkah Mudah:
+      - Langkah 1: Informasi Dasar Lomba (Judul, Kategori, Penyelenggara, Tingkat, Deadline, Biaya).
+      - Langkah 2: Deskripsi, Persyaratan, dan Target Program Studi.
+      - Langkah 3: Upload Poster, Link Pendaftaran, Link Sumber, dan Kontak Panitia.
+   15. Fitur "Pilih Semua Program Studi" (Select All Prodi):
+      - 1 klik checkbox untuk memilih seluruh 9 prodi jika lomba bersifat terbuka umum.
+   16. Upload Poster & Preview Instan:
+      - Area drag-and-drop dengan pratinjau gambar langsung sebelum submit.
+      - Tombol ganti/hapus poster dengan validasi format dan ukuran file (maks 3MB).
+   17. Review Summary Card:
+      - Kartu ringkasan preview sebelum final submit untuk mencegah salah input data.
+   18. Anti-Double Submission Protection:
+      - Tombol submit otomatis terkunci (*disabled with spinner*) saat proses pengiriman berlangsung.
+
+C. Dashboard Mahasiswa (`/dashboard`):
+   19. Kartu Statistik Pribadi:
+      - Total Lomba Diajukan.
+      - Lomba Menunggu Peninjauan (Pending).
+      - Lomba Disetujui & Tayang (Approved).
+      - Lomba Ditolak / Perlu Revisi (Rejected).
+   20. Tab Filter Status Pengajuan:
+      - Tab 'Semua', 'Menunggu Moderasi', 'Disetujui', dan 'Ditolak'.
+   21. Kotak Catatan Alasan Penolakan:
+      - Mahasiswa dapat membaca secara transparan alasan kurator menolak lomba (misal: link rusak, salah kategori, dll).
+   22. Modal Edit & Pengajuan Ulang (Resubmit):
+      - Mengedit data lomba langsung dari dashboard. Begitu diperbaiki, status otomatis kembali menjadi 'pending' untuk direview ulang oleh admin.
+   23. Hapus Draft / Pengajuan Mandiri:
+      - Mahasiswa dapat menghapus lomba miliknya sendiri dengan dialog konfirmasi aman.
+
+--------------------------------------------------------------------------------
+3. FITUR PANEL MODERASI ADMIN (LARAVEL BLADE - HTTP://127.0.0.1:8000/ADMIN)
+--------------------------------------------------------------------------------
+A. Dashboard Admin (`/admin/dashboard`):
+   24. Live Metrics Counter:
+      - Total Pengajuan, Pending Review, Lomba Approved, dan Lomba Rejected.
+   25. Live Indicator Badge di Sidebar:
+      - Label angka merah menyala pada menu "Moderasi Lomba" yang menghitung jumlah antrean pending secara real-time.
+   26. Quick Curation Queue (Antrean Cepat):
+      - Daftar pengajuan pending teratas dengan tombol aksi "Review Sekarang".
+
+B. Manajemen & Kurasi Lomba (`/admin/competitions`):
+   27. Tabel Moderasi Terpadu:
+      - Filter tab status (`Semua`, `Menunggu Moderasi`, `Disetujui`, `Ditolak`).
+      - Pencarian judul, penyelenggara, atau mahasiswa submitter.
+      - Filter dropdown kategori lomba.
+   28. Detail Peninjauan Kurator (`/admin/competitions/{id}`):
+      - Pratinjau poster, data lengkap lomba, submitter, dan tanggal pengajuan.
+   29. Aksi Persetujuan (Approve):
+      - 1 klik menyetujui lomba $\rightarrow$ otomatis terbit di API & katalog publik Next.js, mencatat admin reviewer dan timestamp review.
+   30. Aksi Penolakan Berstruktur (Reject with Reason):
+      - Modal interaktif dengan input wajib catatan penolakan (`rejection_reason`) agar mahasiswa memahami bagian mana yang harus diperbaiki.
+   31. Edit Data Lomba oleh Admin (`/admin/competitions/{id}/edit`):
+      - Hak admin untuk mengoreksi penulisan judul, mengganti kategori, memperbaiki tanggal deadline, atau memperbarui prodi.
+   32. Hapus Lomba oleh Admin:
+      - Penghapusan aman dengan proteksi CSRF dan konfirmasi.
+
+C. Manajemen Master Data:
+   33. Manajemen Kategori Lomba (`/admin/categories`):
+      - Tambah kategori baru, slug otomatis, toggle aktif/nonaktif, edit nama, dan hitungan jumlah relasi lomba.
+   34. Manajemen Program Studi UMPKU (`/admin/study-programs`):
+      - Mengelola 9 Program Studi UMPKU Surakarta (D3, S1, Profesi), status aktif, kode prodi, dan relasi lomba.
+
+--------------------------------------------------------------------------------
+4. FITUR BACKEND, API, & ARSITEKTUR KEAMANAN
+--------------------------------------------------------------------------------
+   35. Otomatisasi Kompresi & Format WebP (`ProcessesWebpImages`):
+      - Setiap gambar poster yang diunggah otomatis dikonversi ke format `.webp` berkualitas tinggi dan terkompresi hemat bandwidth.
+   36. Kebijakan Otorisasi Ketat (`CompetitionPolicy`):
+      - Mencegah mahasiswa melihat/mengedit/menghapus pengajuan milik mahasiswa lain.
+      - API publik secara ketat hanya menyajikan lomba dengan status `approved`.
+   37. Perlindungan Input & Validasi Form Request:
+      - Validasi tanggal deadline tidak boleh tanggal lampau (`after_or_equal:today`).
+      - Validasi URL pendaftaran resmi, integritas Foreign Key kategori, dan pivot prodi.
+   38. 50 Automated Pest/PHPUnit Tests:
+      - Menjamin stabilitas kode 100% tanpa regresi (186 assertions lulus).
+   39. Arsitektur Relasi Database Fleksibel:
+      - Relasi Many-to-Many via pivot table `competition_study_program` sehingga 1 lomba dapat ditargetkan ke beberapa atau seluruh prodi sekaligus.
+
+--------------------------------------------------------------------------------
+5. FITUR DUKUNGAN & LEGACY YANG TETAP DIPERTAHANKAN
+--------------------------------------------------------------------------------
+   40. Customer Service & Live Chat Dua Arah:
+      - Widget bantuan interaktif untuk mahasiswa dan pengunjung tamu.
+      - Mendukung lampiran konteks lomba (`competition_id` & `competition_title`).
+      - Panel admin `/admin/cs` untuk membaca dan membalas pesan secara real-time.
+   41. Modul Berita Kampus (Legacy News):
+      - Database berita lama, model `News`, relasi author, dan endpoint `/api/news` tetap utuh dan aktif.
+   42. Kompatibilitas Dark / Light Theme:
+      - Dukungan penuh mode gelap dan terang di sisi antarmuka publik Next.js.
+================================================================================
+
