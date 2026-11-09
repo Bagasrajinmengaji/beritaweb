@@ -104,7 +104,7 @@
 </div>
 
 <!-- Modal Edit Kategori -->
-<div id="editCatModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
+<div id="editCatModal" class="fixed inset-0 z-50 items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
         <h3 class="font-bold text-white text-base">Edit Nama Kategori</h3>
         <form id="editCatForm" method="POST" action="" class="space-y-4">
@@ -132,10 +132,14 @@
     function openEditCatModal(id, name) {
         document.getElementById('editCatName').value = name;
         document.getElementById('editCatForm').action = "/admin/categories/" + id;
-        document.getElementById('editCatModal').classList.remove('hidden');
+        const modal = document.getElementById('editCatModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
     function closeEditCatModal() {
-        document.getElementById('editCatModal').classList.add('hidden');
+        const modal = document.getElementById('editCatModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
     }
 </script>
 @endpush

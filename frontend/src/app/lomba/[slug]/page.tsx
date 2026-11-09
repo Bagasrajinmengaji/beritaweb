@@ -165,7 +165,7 @@ export default function LombaDetailPage({
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-6 animate-pulse">
           <div className="h-6 w-36 bg-stone-200 dark:bg-zinc-800 rounded-lg" />
           <div className="h-10 w-4/5 bg-stone-200 dark:bg-zinc-800 rounded-xl" />
-          <div className="aspect-16/9 w-full bg-stone-200 dark:bg-zinc-800 rounded-3xl" />
+          <div className="aspect-video w-full bg-stone-200 dark:bg-zinc-800 rounded-3xl" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2 space-y-4">
               <div className="h-32 bg-stone-200 dark:bg-zinc-800 rounded-2xl" />
@@ -334,7 +334,7 @@ export default function LombaDetailPage({
           {/* Kolom Kiri: Poster, Deskripsi, Persyaratan, Prodi */}
           <div className="lg:col-span-2 space-y-8">
             {/* Poster Lomba */}
-            <div className="relative aspect-16/9 sm:aspect-16/10 w-full rounded-3xl overflow-hidden bg-stone-100 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-800 shadow-md">
+            <div className="relative aspect-video sm:aspect-16/10 w-full rounded-3xl overflow-hidden bg-stone-100 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-800 shadow-md">
               <Image
                 src={posterSrc}
                 alt={`Poster ${competition.title}`}

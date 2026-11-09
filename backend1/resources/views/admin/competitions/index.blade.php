@@ -222,10 +222,10 @@
 </div>
 
 <!-- ── MODAL TOLAK PENGAJUAN (REJECT MODAL) ── -->
-<div id="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
+<div id="rejectModal" class="fixed inset-0 z-50 items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 class="font-bold text-white text-base flex items-center gap-2 text-rose-400">
+            <h3 class="font-bold text-base flex items-center gap-2 text-rose-400">
                 <i data-lucide="x-circle" class="w-5 h-5"></i>
                 <span>Tolak Pengajuan Lomba</span>
             </h3>
@@ -269,10 +269,14 @@
     function openRejectModal(id, title) {
         document.getElementById('modalCompTitle').innerText = title;
         document.getElementById('rejectForm').action = "/admin/competitions/" + id + "/reject";
-        document.getElementById('rejectModal').classList.remove('hidden');
+        const modal = document.getElementById('rejectModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
     function closeRejectModal() {
-        document.getElementById('rejectModal').classList.add('hidden');
+        const modal = document.getElementById('rejectModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
     }
 </script>
 @endpush

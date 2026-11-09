@@ -111,7 +111,7 @@
 </div>
 
 <!-- Modal Edit Program Studi -->
-<div id="editProdiModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
+<div id="editProdiModal" class="fixed inset-0 z-50 items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
         <h3 class="font-bold text-white text-base">Edit Nama Program Studi</h3>
         <form id="editProdiForm" method="POST" action="" class="space-y-4">
@@ -139,10 +139,14 @@
     function openEditProdiModal(id, name) {
         document.getElementById('editProdiName').value = name;
         document.getElementById('editProdiForm').action = "/admin/study-programs/" + id;
-        document.getElementById('editProdiModal').classList.remove('hidden');
+        const modal = document.getElementById('editProdiModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
     function closeEditProdiModal() {
-        document.getElementById('editProdiModal').classList.add('hidden');
+        const modal = document.getElementById('editProdiModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
     }
 </script>
 @endpush

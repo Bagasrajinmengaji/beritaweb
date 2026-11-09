@@ -35,7 +35,7 @@
 <body class="h-full flex overflow-hidden bg-slate-950 text-slate-100 antialiased">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex">
+    <aside class="w-64 shrink-0 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col justify-between">
         <div>
             <!-- Brand Logo -->
             <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-800">
