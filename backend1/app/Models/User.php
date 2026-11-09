@@ -37,6 +37,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Cek apakah user memiliki peran admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
      * Relasi berita yang ditulis user
      */
     public function news()

@@ -9,6 +9,9 @@ class CompetitionListResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $user = $request->user('sanctum') ?? $request->user();
+        $isOwnerOrAdmin = $user && ($user->id === $this->user_id || $user->role === 'admin');
+
         return [
             'id' => $this->id,
             'title' => $this->title,
@@ -21,6 +24,7 @@ class CompetitionListResource extends JsonResource
             'registration_fee' => $this->registration_fee,
             'poster_url' => $this->poster_url,
             'status' => $this->status,
+            'rejection_reason' => $this->when($isOwnerOrAdmin, $this->rejection_reason),
             'category' => $this->whenLoaded('category', function () {
                 return [
                     'id' => $this->category->id,
