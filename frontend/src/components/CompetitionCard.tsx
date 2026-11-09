@@ -138,7 +138,7 @@ export function CompetitionCard({ competition, index = 0 }: CompetitionCardProps
         {/* Action Button */}
         <Link
           href={`/lomba/${competition.slug}`}
-          className="mt-4 w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white text-zinc-700 dark:text-zinc-200 text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          className="mt-4 w-full min-h-11 flex items-center justify-center gap-2 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white text-zinc-700 dark:text-zinc-200 text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
         >
           <span>Lihat Detail Lomba</span>
           <ArrowRight size={13} aria-hidden="true" />

@@ -350,7 +350,7 @@ export function Navbar() {
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={[
-                    'flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors min-h-[44px]',
+                    'flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors min-h-11',
                     isActive
                       ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300'
                       : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-zinc-900',
@@ -379,7 +379,7 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                  className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                 >
                   <LogOut size={16} />
                   <span>Keluar</span>
@@ -390,7 +390,7 @@ export function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-orange-600 text-white font-semibold text-sm hover:bg-orange-700 transition-colors"
+                  className="min-h-11 flex items-center justify-center gap-1.5 rounded-xl bg-orange-600 text-white font-semibold text-sm hover:bg-orange-700 transition-colors"
                 >
                   <LogIn size={15} />
                   <span>Masuk</span>
@@ -398,7 +398,7 @@ export function Navbar() {
                 <Link
                   href="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-sm hover:border-orange-500 transition-colors"
+                  className="min-h-11 flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-sm hover:border-orange-500 transition-colors"
                 >
                   <UserPlus size={15} />
                   <span>Daftar</span>
