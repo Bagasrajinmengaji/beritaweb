@@ -2,322 +2,310 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Calendar, User, ArrowRight, BookOpen, TrendingUp } from 'lucide-react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface NewsItem {
-  id: number;
-  title: string;
-  author?: string | null;
-  content: string;
-  image: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function excerpt(text: string, maxLength = 160) {
-  const plainText = text.replace(/<[^>]*>/g, '').trim();
-  if (plainText.length <= maxLength) return plainText;
-  return plainText.slice(0, maxLength).trimEnd() + '…';
-}
-
-function getImageSrc(imagePath: string): string {
-  if (!imagePath) return '/placeholder-news.webp';
-  if (imagePath.startsWith('http')) return imagePath;
-  const base = process.env.NEXT_PUBLIC_STORAGE_URL ?? 'http://127.0.0.1:8000';
-  return `${base}${imagePath}`;
-}
-
-// ─── Skeleton Components ──────────────────────────────────────────────────────
-
-function HeroSkeleton() {
-  return (
-    <div className="rounded-2xl overflow-hidden bg-stone-200/70 dark:bg-zinc-800/70 animate-pulse">
-      <div className="aspect-video sm:aspect-21/9 skeleton" />
-      <div className="p-6 sm:p-8 space-y-4">
-        <div className="skeleton h-5 w-20 rounded-full" />
-        <div className="skeleton h-9 w-4/5 rounded" />
-        <div className="skeleton h-9 w-3/5 rounded" />
-        <div className="skeleton h-4 w-full rounded" />
-        <div className="skeleton h-4 w-5/6 rounded" />
-        <div className="flex gap-4 pt-2">
-          <div className="skeleton h-4 w-24 rounded" />
-          <div className="skeleton h-4 w-32 rounded" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardSkeleton() {
-  return (
-    <div className="rounded-xl overflow-hidden bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 animate-pulse">
-      <div className="aspect-16/10 skeleton" />
-      <div className="p-4 space-y-3">
-        <div className="skeleton h-4 w-16 rounded-full" />
-        <div className="skeleton h-5 w-full rounded" />
-        <div className="skeleton h-5 w-4/5 rounded" />
-        <div className="skeleton h-4 w-full rounded" />
-        <div className="skeleton h-4 w-3/4 rounded" />
-        <div className="skeleton h-3 w-28 rounded pt-2" />
-      </div>
-    </div>
-  );
-}
-
-// ─── Hero Card ────────────────────────────────────────────────────────────────
-
-function HeroCard({ news }: { news: NewsItem }) {
-  const src = getImageSrc(news.image);
-
-  return (
-    <article className="group relative rounded-2xl overflow-hidden bg-zinc-900 shadow-xl border border-stone-200/30 dark:border-zinc-800">
-      {/* Image */}
-      <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden">
-        <Image
-          src={src}
-          alt={news.title}
-          fill
-          priority
-          className="object-cover img-zoom brightness-75 dark:brightness-60"
-          sizes="(max-width: 768px) 100vw, 90vw"
-          unoptimized={src.startsWith('http://127')}
-        />
-        {/* overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-transparent" />
-      </div>
-
-      {/* Content overlaid on image */}
-      <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10">
-        {/* Category badge */}
-        <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-orange-600 dark:bg-orange-500 px-3.5 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
-          <TrendingUp size={12} aria-hidden="true" />
-          Berita Utama
-        </span>
-
-        {/* Title */}
-        <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight line-clamp-3 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-          <Link
-            href={`/news/${news.id}`}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 rounded-lg"
-          >
-            <span className="hover:text-orange-300 transition-colors">{news.title}</span>
-          </Link>
-        </h2>
-
-        {/* Excerpt */}
-        <p className="text-stone-200 text-base leading-relaxed line-clamp-2 mb-4 max-w-2xl">
-          {excerpt(news.content)}
-        </p>
-
-        {/* Meta */}
-        <div className="flex items-center gap-4 text-stone-300 text-sm">
-          <span className="flex items-center gap-1.5 font-medium">
-            <User size={13} aria-hidden="true" className="text-orange-400" />
-            {news.author ?? 'Redaksi'}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Calendar size={13} aria-hidden="true" className="text-orange-400" />
-            <time dateTime={news.created_at}>{formatDate(news.created_at)}</time>
-          </span>
-        </div>
-      </div>
-
-      {/* Read more arrow */}
-      <Link
-        href={`/news/${news.id}`}
-        className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm text-white hover:bg-orange-600 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
-        aria-label={`Baca berita: ${news.title}`}
-      >
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
-    </article>
-  );
-}
-
-// ─── News Card ────────────────────────────────────────────────────────────────
-
-function NewsCard({ news, index }: { news: NewsItem; index: number }) {
-  const src = getImageSrc(news.image);
-
-  return (
-    <article className="group card-lift rounded-xl overflow-hidden bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 hover:border-orange-500/40 transition-colors flex flex-col">
-      {/* Image */}
-      <div className="relative aspect-16/10 overflow-hidden bg-stone-100 dark:bg-zinc-800">
-        <Image
-          src={src}
-          alt={news.title}
-          fill
-          loading={index < 3 ? 'eager' : 'lazy'}
-          className="object-cover img-zoom"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          unoptimized={src.startsWith('http://127')}
-        />
-      </div>
-
-      <div className="flex flex-col flex-1 p-5">
-        {/* Category badge */}
-        <span className="mb-2.5 inline-flex w-fit items-center rounded-full bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-orange-700 dark:text-orange-300 tracking-wide uppercase border border-orange-200/50 dark:border-orange-900/50">
-          Berita
-        </span>
-
-        {/* Title */}
-        <h3 className="text-zinc-900 dark:text-zinc-100 font-semibold text-base leading-snug line-clamp-2 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-          <Link
-            href={`/news/${news.id}`}
-            className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded"
-          >
-            {news.title}
-          </Link>
-        </h3>
-
-        {/* Excerpt */}
-        <p className="text-stone-600 dark:text-stone-300 text-sm leading-relaxed line-clamp-2 flex-1 mb-4">
-          {excerpt(news.content, 120)}
-        </p>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs pt-3 border-t border-stone-100 dark:border-zinc-800">
-          <span className="flex items-center gap-1 font-medium">
-            <User size={11} aria-hidden="true" className="text-orange-600 dark:text-orange-400" />
-            {news.author ?? 'Redaksi'}
-          </span>
-          <time dateTime={news.created_at} className="flex items-center gap-1">
-            <Calendar size={11} aria-hidden="true" />
-            {formatDate(news.created_at)}
-          </time>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-// ─── Empty State ──────────────────────────────────────────────────────────────
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
-      <BookOpen size={40} className="text-stone-400 dark:text-stone-600" aria-hidden="true" />
-      <p className="text-lg font-medium text-zinc-800 dark:text-zinc-200">
-        Belum ada berita tersedia.
-      </p>
-      <p className="text-sm text-stone-500 dark:text-stone-400">
-        Mulai dengan menambahkan berita pertama Anda.
-      </p>
-      <Link
-        href="/create"
-        className="mt-2 inline-flex items-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 shadow-sm"
-      >
-        Tulis Berita Pertama
-        <ArrowRight size={15} aria-hidden="true" />
-      </Link>
-    </div>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+import { useRouter } from 'next/navigation';
+import {
+  Search,
+  Trophy,
+  Flame,
+  ArrowRight,
+  PlusCircle,
+  Sparkles,
+  Calendar,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react';
+import { CompetitionListItem, Category } from '@/types/competition';
+import { CompetitionCard } from '@/components/CompetitionCard';
+import { CompetitionCardSkeleton } from '@/components/CompetitionCardSkeleton';
 
 export default function HomePage() {
-  const [newsList, setNewsList] = useState<NewsItem[]>([]);
+  const router = useRouter();
+
+  // State pencarian
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // State data dari API
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [latestCompetitions, setLatestCompetitions] = useState<CompetitionListItem[]>([]);
+  const [closingSoonCompetitions, setClosingSoonCompetitions] = useState<CompetitionListItem[]>([]);
+
+  // State loading & error
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
+  const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
 
-    fetch(`${API}/news`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        return res.json() as Promise<NewsItem[]>;
-      })
-      .then((data) => {
-        setNewsList(data);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Gagal memuat berita.');
-        setLoading(false);
-      });
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch kategori, lomba terbaru, dan lomba segera berakhir secara paralel
+      const [catRes, latestRes, closingRes] = await Promise.all([
+        fetch(`${API}/categories`).then((r) => (r.ok ? r.json() : { data: [] })),
+        fetch(`${API}/competitions?per_page=6&sort=newest`).then((r) =>
+          r.ok ? r.json() : { data: [] }
+        ),
+        fetch(`${API}/competitions?per_page=4&sort=deadline_asc&deadline_status=segera`).then((r) =>
+          r.ok ? r.json() : { data: [] }
+        ),
+      ]);
+
+      setCategories(catRes.data || []);
+      setLatestCompetitions(latestRes.data || []);
+      setClosingSoonCompetitions(closingRes.data || []);
+    } catch (err) {
+      console.error('Error fetching homepage data:', err);
+      setError('Gagal memuat data informasi lomba. Pastikan server backend sudah berjalan.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  const [hero, ...rest] = newsList;
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/lomba?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/lomba');
+    }
+  };
 
   return (
-    <main id="main-content" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14" role="main">
-      {/* ── Loading ── */}
-      {loading && (
-        <div aria-busy="true" aria-label="Memuat berita…">
-          <HeroSkeleton />
-          <section className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Daftar berita">
-            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
-          </section>
-        </div>
-      )}
+    <main className="min-h-screen bg-stone-50 dark:bg-zinc-950 pb-16">
+      {/* ── 1. Hero Section Sederhana & Ringkas Sesuai Superprompt ── */}
+      <section className="relative overflow-hidden border-b border-stone-200 dark:border-zinc-800 bg-linear-to-b from-orange-50/60 via-stone-50 to-stone-50 dark:from-zinc-900/60 dark:via-zinc-950 dark:to-zinc-950 pt-10 pb-14 sm:pt-14 sm:pb-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center space-y-4">
+            {/* Pill Kampus */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 dark:bg-orange-950/70 border border-orange-200 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 text-xs font-semibold shadow-2xs">
+              <Sparkles size={14} className="text-orange-600 dark:text-orange-400" />
+              <span>Pusat Prestasi Mahasiswa UMPKU Surakarta</span>
+            </div>
 
-      {/* ── Error ── */}
-      {!loading && error && (
-        <div
-          role="alert"
-          className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 px-6 py-5 text-red-700 dark:text-red-400"
-        >
-          <p className="font-semibold mb-1">Tidak dapat memuat berita</p>
-          <p className="text-sm">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 text-sm font-medium underline underline-offset-2 hover:no-underline"
-          >
-            Coba lagi
-          </button>
-        </div>
-      )}
+            {/* Heading Sesuai Superprompt */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+              Temukan Lomba yang Sesuai dengan{' '}
+              <span className="text-orange-600 dark:text-orange-500">Minat dan Program Studimu</span>
+            </h1>
 
-      {/* ── Content ── */}
-      {!loading && !error && (
-        <>
-          {newsList.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <>
-              {/* Hero */}
-              {hero && (
-                <section aria-label="Berita Utama">
-                  <HeroCard news={hero} />
-                </section>
-              )}
+            {/* Subheading Sesuai Superprompt */}
+            <p className="text-base sm:text-lg text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed">
+              Jelajahi informasi kompetisi, cek batas pendaftaran, dan bagikan peluang lomba kepada
+              mahasiswa UMPKU Surakarta.
+            </p>
 
-              {/* Grid */}
-              {rest.length > 0 && (
-                <section className="mt-10 sm:mt-14" aria-labelledby="latest-heading">
-                  <h2
-                    id="latest-heading"
-                    className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-6 pb-3 border-b border-stone-200 dark:border-zinc-800"
-                    style={{ fontFamily: 'var(--font-display)' }}
+            {/* ── 2. Search Bar Cepat ── */}
+            <form onSubmit={handleSearchSubmit} className="pt-4 max-w-2xl mx-auto">
+              <div className="relative flex items-center shadow-md rounded-2xl bg-white dark:bg-zinc-900 border border-stone-300 dark:border-zinc-700 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all p-1.5">
+                <Search size={20} className="ml-3 text-stone-400 shrink-0" aria-hidden="true" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari judul lomba, penyelenggara, atau kata kunci..."
+                  className="w-full px-3 py-2.5 text-base sm:text-sm bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-stone-400 focus:outline-none"
+                  aria-label="Cari informasi lomba"
+                />
+                <button
+                  type="submit"
+                  className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-semibold text-sm transition-colors duration-150 shrink-0 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                >
+                  <span>Cari Lomba</span>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </button>
+              </div>
+            </form>
+
+            {/* ── 3. Quick Category Pills ── */}
+            {categories.length > 0 && (
+              <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
+                <span className="text-xs text-stone-500 dark:text-stone-400 font-medium mr-1">
+                  Kategori Populer:
+                </span>
+                {categories.slice(0, 5).map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/lomba?category=${cat.slug}`}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-700 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-2xs"
                   >
-                    Berita Terbaru
+                    {cat.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/lomba"
+                  className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline px-2 py-1"
+                >
+                  Lihat Semua →
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Content Container ── */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-12 space-y-16">
+        {/* Error Notification */}
+        {error && (
+          <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-red-700 dark:text-red-300 text-sm">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle size={18} className="shrink-0 text-red-600" />
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={fetchData}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs transition-colors shrink-0"
+            >
+              <RefreshCw size={12} />
+              <span>Coba Lagi</span>
+            </button>
+          </div>
+        )}
+
+        {/* ── 4. Section: Lomba Segera Berakhir (Deadline Terdekat) ── */}
+        {(loading || closingSoonCompetitions.length > 0) && (
+          <section aria-labelledby="heading-closing-soon">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                  <Flame size={18} aria-hidden="true" />
+                </span>
+                <div>
+                  <h2
+                    id="heading-closing-soon"
+                    className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight"
+                  >
+                    Segera Ditutup
                   </h2>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {rest.map((item, i) => (
-                      <NewsCard key={item.id} news={item} index={i} />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
+                  <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                    Batas pendaftaran kurang dari 7 hari. Jangan lewatkan kesempatan ini!
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/lomba?deadline_status=segera"
+                className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-orange-600 dark:text-orange-400 hover:underline"
+              >
+                <span>Lihat Semua</span>
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <CompetitionCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {closingSoonCompetitions.map((comp, idx) => (
+                  <CompetitionCard key={comp.id} competition={comp} index={idx} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── 5. Section: Lomba Terbaru ── */}
+        <section aria-labelledby="heading-latest">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                <Trophy size={18} aria-hidden="true" />
+              </span>
+              <div>
+                <h2
+                  id="heading-latest"
+                  className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight"
+                >
+                  Informasi Lomba Terbaru
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                  Peluang kompetisi yang baru disetujui dan siap kamu ikuti.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/lomba"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 dark:text-orange-400 hover:underline"
+            >
+              <span>Jelajah Semua ({latestCompetitions.length})</span>
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <CompetitionCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : latestCompetitions.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestCompetitions.map((comp, idx) => (
+                <CompetitionCard key={comp.id} competition={comp} index={idx} />
+              ))}
+            </div>
+          ) : (
+            /* Empty State Sesuai Superprompt */
+            <div className="rounded-3xl border border-dashed border-stone-300 dark:border-zinc-800 p-12 text-center space-y-4 bg-white/50 dark:bg-zinc-900/50">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400">
+                <Trophy size={28} />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">
+                Belum ada informasi lomba yang tersedia
+              </h3>
+              <p className="text-sm text-stone-500 dark:text-stone-400 max-w-md mx-auto">
+                Punya info lomba tingkat regional, nasional, atau internasional? Bagikan ke teman-teman mahasiswa sekarang.
+              </p>
+              <Link
+                href="/lomba/tambah"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-xs"
+              >
+                <PlusCircle size={16} />
+                <span>Ajukan Lomba Pertama</span>
+              </Link>
+            </div>
           )}
-        </>
-      )}
+        </section>
+
+        {/* ── 6. CTA Banner Mahasiswa: Bagikan Info Lomba ── */}
+        <section className="relative rounded-3xl overflow-hidden bg-linear-to-r from-orange-600 to-amber-600 text-white p-8 sm:p-12 shadow-lg">
+          <div className="relative z-10 max-w-2xl space-y-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold">
+              <Sparkles size={13} />
+              <span>Kontribusi Mahasiswa</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+              Punya Informasi Lomba Menarik? Bagikan ke Mahasiswa Lain!
+            </h2>
+            <p className="text-orange-100 text-sm sm:text-base leading-relaxed">
+              Bantu rekan-rekan mahasiswa UMPKU Surakarta menemukan peluang prestasi dan kejuaraan. Setiap pengajuan akan diverifikasi oleh admin sebelum tampil kepada publik.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/lomba/tambah"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-bold text-sm transition-all shadow-md active:scale-98"
+              >
+                <PlusCircle size={18} />
+                <span>Tambah Informasi Lomba Sekarang</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Decorative Background Elements */}
+          <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute right-20 top-0 h-40 w-40 rounded-full bg-amber-400/20 blur-xl" />
+        </section>
+      </div>
     </main>
   );
 }

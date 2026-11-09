@@ -65,6 +65,7 @@ beritaweb/
 ## Tech stack
 
 Frontend:
+
 - Next.js 15+ dengan App Router.
 - React 19.
 - TypeScript.
@@ -73,6 +74,7 @@ Frontend:
 - next-themes.
 
 Backend:
+
 - PHP Laravel, gunakan versi aktual yang terpasang.
 - Laravel Sanctum.
 - Laravel Socialite untuk Google Login.
@@ -259,6 +261,195 @@ Jangan menggunakan terlalu banyak animasi, warna, kartu, bayangan, ikon, atau el
 
 Desain harus mengutamakan kemudahan penggunaan, bukan sekadar terlihat menarik.
 
+# E.1 — ANTI AI-SLOP DESIGN DIRECTIVE
+
+## TUJUAN
+
+Desain Portal Informasi Lomba UMPKU Surakarta harus terlihat seperti website institusi pendidikan yang dirancang secara profesional oleh UI/UX designer manusia, bukan hasil template AI generik.
+
+Prioritaskan keterbacaan, kesederhanaan, navigasi, konsistensi, dan kemudahan menyelesaikan tugas.
+
+Jangan menambahkan elemen visual hanya untuk membuat halaman terlihat lebih ramai atau futuristik.
+
+## DESAIN YANG DILARANG
+
+Hindari pola berikut kecuali memiliki alasan fungsional yang jelas:
+
+1. Gradient ungu-biru atau neon sebagai latar utama.
+2. Glassmorphism dan backdrop blur dekoratif.
+3. Glowing border, glowing button, dan neon shadow.
+4. Floating geometric shapes.
+5. Background dengan banyak lingkaran dekoratif.
+6. Hero section raksasa yang memenuhi viewport.
+7. Ilustrasi 3D generik.
+8. Emoji sebagai pengganti ikon antarmuka.
+9. Terlalu banyak card bersarang.
+10. Rounded corner berlebihan.
+11. Shadow besar pada setiap komponen.
+12. Gradient pada setiap tombol.
+13. Animasi terus-menerus.
+14. Counter statistik palsu.
+15. Testimonial atau logo sponsor fiktif.
+16. Teks marketing generik yang tidak menyampaikan informasi.
+17. Semua heading menggunakan gradient text.
+18. Badge berwarna-warni tanpa makna.
+19. Penggunaan ikon untuk setiap baris teks.
+20. Landing page bergaya startup SaaS yang tidak sesuai konteks portal kampus.
+
+## DESIGN PHILOSOPHY
+
+Gunakan pendekatan:
+
+**Content-first, minimal, functional, accessible, responsive.**
+
+Aturan:
+
+- Informasi lomba merupakan fokus utama.
+- Gunakan whitespace secara terukur.
+- Gunakan struktur layout yang jelas.
+- Gunakan maksimum satu primary CTA per area.
+- Pilih warna berdasarkan fungsi, bukan dekorasi.
+- Gunakan tipografi yang memiliki hirarki jelas.
+- Pertahankan konsistensi antarhalaman.
+- Kurangi komponen yang tidak memiliki manfaat.
+- Jangan mengorbankan usability demi estetika.
+
+## TYPOGRAPHY
+
+Gunakan Inter, Geist, atau font sans-serif existing yang sudah sesuai.
+
+Panduan awal:
+
+- Body: 14–16px.
+- Heading halaman: 24–32px.
+- Heading section: 18–24px.
+- Label input: 14px.
+- Helper text: 12–14px.
+
+Gunakan font weight secara konsisten.
+
+Jangan membuat semua teks bold.
+
+Jangan menggunakan terlalu banyak ukuran font.
+
+## COLOR SYSTEM
+
+Gunakan:
+
+- Satu warna aksen utama.
+- Warna teks netral.
+- Warna latar netral.
+- Warna border netral.
+- Warna status yang memiliki makna.
+
+Gunakan warna resmi kampus hanya setelah diverifikasi melalui aset atau pedoman branding yang tersedia.
+
+Jangan menebak identitas visual kampus.
+
+Jangan menggunakan warna berbeda untuk setiap kartu lomba jika tidak memberikan informasi penting.
+
+## COMPONENT DESIGN
+
+Card lomba:
+
+- Poster dengan aspect ratio konsisten.
+- Judul maksimal 2 baris pada tampilan ringkas.
+- Nama penyelenggara.
+- Program studi.
+- Deadline.
+- Status pendaftaran.
+- Tindakan Lihat Detail yang jelas.
+
+Hindari nested card.
+
+Gunakan border tipis.
+
+Gunakan shadow hanya jika membantu pemisahan visual.
+
+Tombol:
+
+- Primary: solid.
+- Secondary: outline atau ghost.
+- Destructive: digunakan untuk penghapusan.
+
+Jangan gunakan gradient button.
+
+Form:
+
+- Label di atas input.
+- Field tersusun secara vertikal.
+- Helper text hanya saat dibutuhkan.
+- Validasi berada dekat input.
+- Satu kolom pada mobile.
+- Lebar form dibatasi agar nyaman dibaca di desktop.
+- Jangan membuat form menyerupai dashboard enterprise yang kompleks.
+
+## LAYOUT
+
+Desktop:
+
+- Navbar sederhana.
+- Max-width container sekitar 1152–1280px.
+- Grid lomba 3 kolom jika ruang cukup.
+- Spacing konsisten.
+
+Tablet:
+
+- Grid 2 kolom.
+
+Mobile:
+
+- Grid 1 kolom.
+- Navigasi ringkas.
+- Search mudah dijangkau.
+- Form full-width dengan padding aman.
+- Tombol mudah disentuh.
+- Tidak ada horizontal overflow.
+
+Jangan memakai fixed width yang menyebabkan layout rusak.
+
+## CONTENT WRITING
+
+Gunakan microcopy yang natural dan langsung.
+
+Contoh:
+
+BENAR:
+"Temukan informasi lomba terbaru."
+
+SALAH:
+"Raih peluang tanpa batas dan wujudkan masa depan gemilang melalui ekosistem inovasi kompetitif terintegrasi."
+
+BENAR:
+"Tambahkan informasi lomba yang ingin kamu bagikan."
+
+SALAH:
+"Bagikan inspirasi dan jadilah bagian dari revolusi kolaborasi mahasiswa masa depan."
+
+Hindari jargon dan kalimat marketing yang berlebihan.
+
+## DESIGN REVIEW
+
+Sebelum mengimplementasikan UI setiap halaman:
+
+1. Jelaskan tujuan halaman.
+2. Tentukan informasi paling penting.
+3. Tentukan primary action.
+4. Tentukan struktur layout sederhana.
+5. Pastikan tidak ada elemen dekoratif tanpa fungsi.
+6. Periksa konsistensi design system.
+7. Periksa desktop dan mobile.
+
+Setelah implementasi, periksa screenshot pada beberapa ukuran viewport.
+
+Jika halaman terlihat seperti template AI generik, revisi dengan mengurangi dekorasi dan memperbaiki hirarki informasi.
+
+Jangan menambahkan animasi, card, banner, badge, atau ilustrasi hanya untuk mengisi ruang kosong.
+
+**FINAL DESIGN RULE:**
+
+Jika sebuah elemen tidak membantu pengguna menemukan lomba, memahami informasi, mengisi formulir, atau melakukan navigasi, pertimbangkan untuk menghapusnya.
+
 ## Aturan visual
 
 Gunakan karakter desain berikut:
@@ -284,6 +475,7 @@ Gunakan Bahasa Indonesia yang sederhana.
 Contoh:
 
 BENAR:
+
 - Tambah Lomba
 - Judul Lomba
 - Batas Pendaftaran
@@ -295,6 +487,7 @@ BENAR:
 - Pendaftaran Ditutup
 
 HINDARI:
+
 - Create Competition
 - Submit Entry
 - Publish Content
@@ -1430,27 +1623,35 @@ Setiap selesai satu tahap, gunakan format:
 ## LAPORAN TAHAP [N] — [NAMA TAHAP]
 
 ### 1. Ringkasan
+
 Jelaskan apa yang telah dikerjakan.
 
 ### 2. Implementasi
+
 Jelaskan perubahan fitur yang benar-benar sudah dilakukan.
 
 ### 3. File yang Berubah
+
 Sebutkan path file yang dibuat atau dimodifikasi.
 
 ### 4. Database
+
 Jelaskan perubahan skema jika ada.
 
 ### 5. Pengujian
+
 Tampilkan perintah yang dijalankan dan hasilnya.
 
 ### 6. Hasil UI
+
 Jelaskan tampilan desktop dan mobile yang sudah dibuat. Berikan screenshot jika tools tersedia.
 
 ### 7. Masalah atau Keterbatasan
+
 Laporkan masalah secara transparan.
 
 ### 8. Status
+
 Gunakan salah satu:
 
 - SELESAI DAN TERVERIFIKASI.
@@ -1460,6 +1661,7 @@ Gunakan salah satu:
 Jangan menggunakan status selesai jika ada kegagalan penting.
 
 ### 9. Tahap Selanjutnya
+
 Jelaskan apa yang akan dikerjakan berikutnya.
 
 Setelah laporan, BERHENTI.
