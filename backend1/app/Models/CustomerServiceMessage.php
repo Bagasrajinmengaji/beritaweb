@@ -18,6 +18,8 @@ class CustomerServiceMessage extends Model
         'user_email',
         'news_id',
         'news_title',
+        'competition_id',
+        'competition_title',
         'message',
         'sender',
         'is_read_by_admin',
@@ -38,5 +40,10 @@ class CustomerServiceMessage extends Model
     public function news()
     {
         return $this->belongsTo(News::class);
+    }
+
+    public function competition()
+    {
+        return $this->belongsTo(Competition::class);
     }
 }

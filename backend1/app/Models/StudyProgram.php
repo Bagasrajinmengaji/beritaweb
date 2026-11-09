@@ -42,3 +42,4 @@ class StudyProgram extends Model
         );
     }
 }
+

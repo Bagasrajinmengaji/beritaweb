@@ -32,3 +32,4 @@ class Category extends Model
         return $this->hasMany(Competition::class);
     }
 }
+

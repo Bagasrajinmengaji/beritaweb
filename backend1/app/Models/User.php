@@ -43,4 +43,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(News::class);
     }
+
+    /**
+     * Relasi kompetisi yang diajukan oleh user
+     */
+    public function competitions()
+    {
+        return $this->hasMany(Competition::class, 'user_id');
+    }
+
+    /**
+     * Relasi kompetisi yang direview/dimoderasi oleh user (admin)
+     */
+    public function reviewedCompetitions()
+    {
+        return $this->hasMany(Competition::class, 'reviewed_by');
+    }
 }
