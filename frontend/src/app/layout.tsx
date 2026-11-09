@@ -4,6 +4,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { AccessibilityWidget } from '@/components/AccessibilityWidget';
 import { CustomerServiceChat } from '@/components/CustomerServiceChat';
 
@@ -21,16 +22,16 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Portal Berita — Berita Terkini Indonesia',
-    template: '%s | Portal Berita',
+    default: 'Portal Lomba UMPKU — Informasi Kompetisi Mahasiswa UMPKU Surakarta',
+    template: '%s | Portal Lomba UMPKU',
   },
   description:
-    'Portal Berita menyajikan liputan terkini, terpercaya, dan mendalam seputar peristiwa Indonesia dan dunia.',
-  keywords: ['berita', 'portal berita', 'berita indonesia', 'berita terkini'],
+    'Portal Informasi Lomba resmi Universitas Muhammadiyah PKU (UMPKU) Surakarta. Temukan info kompetisi, cek batas deadline pendaftaran, dan ajukan peluang lomba kemahasiswaan.',
+  keywords: ['lomba mahasiswa', 'portal lomba', 'umpku surakarta', 'kompetisi kampus', 'beasiswa dan lomba'],
   openGraph: {
     type: 'website',
     locale: 'id_ID',
-    siteName: 'Portal Berita',
+    siteName: 'Portal Lomba UMPKU Surakarta',
   },
 };
 
@@ -55,9 +56,7 @@ export default function RootLayout({
           </div>
           <AccessibilityWidget />
           <CustomerServiceChat />
-          <footer className="mt-auto border-t border-stone-200 dark:border-zinc-800 py-8 text-center text-sm text-stone-500 dark:text-stone-400">
-            <p>© 2026 Portal Berita. Seluruh hak cipta dilindungi.</p>
-          </footer>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
