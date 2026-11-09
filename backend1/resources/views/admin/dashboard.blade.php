@@ -1,145 +1,182 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Ringkasan')
-@section('page_title', 'Ringkasan & Statistik')
+@section('title', 'Dashboard Administrator')
+@section('page_title', 'Ringkasan & Moderasi Lomba')
 
 @section('content')
 <div class="space-y-6">
 
-    <!-- STATS CARDS -->
+    <!-- ── STATS CARDS MODERASI LOMBA ── -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Total Berita -->
+        <!-- Total Lomba -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Berita</p>
-                <h3 class="text-2xl font-bold text-white mt-1">{{ number_format($totalNews) }}</h3>
-                <a href="{{ route('admin.news.index') }}" class="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 font-medium mt-2">
-                    Kelola Berita <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Lomba</p>
+                <h3 class="text-2xl font-bold text-white mt-1">{{ number_format($totalCompetitions) }}</h3>
+                <a href="{{ route('admin.competitions.index') }}" class="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 font-medium mt-2">
+                    Kelola Lomba <i data-lucide="chevron-right" class="w-3 h-3"></i>
                 </a>
             </div>
             <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center">
-                <i data-lucide="newspaper" class="w-6 h-6"></i>
+                <i data-lucide="trophy" class="w-6 h-6"></i>
             </div>
         </div>
 
-        <!-- Total User -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between">
+        <!-- Menunggu Verifikasi (Pending) -->
+        <div class="bg-slate-900 border border-amber-900/40 rounded-2xl p-5 flex items-center justify-between {{ $pendingCompetitions > 0 ? 'ring-1 ring-amber-500/30' : '' }}">
             <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna Terdaftar</p>
-                <h3 class="text-2xl font-bold text-white mt-1">{{ number_format($totalUsers) }}</h3>
-                <span class="text-xs text-slate-500 font-medium mt-2 block">
-                    {{ $totalAdmins }} Administrator
-                </span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
-                <i data-lucide="users" class="w-6 h-6"></i>
-            </div>
-        </div>
-
-        <!-- CS Belum Terbaca -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pesan CS Menunggu</p>
-                <h3 class="text-2xl font-bold {{ $unreadCS > 0 ? 'text-rose-400' : 'text-white' }} mt-1">
-                    {{ number_format($unreadCS) }}
-                </h3>
-                <a href="{{ route('admin.cs.index') }}" class="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 font-medium mt-2">
-                    Buka CS Inbox <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 {{ $pendingCompetitions > 0 ? 'animate-pulse' : '' }}"></span>
+                    Menunggu Verifikasi
+                </p>
+                <h3 class="text-2xl font-bold text-amber-400 mt-1">{{ number_format($pendingCompetitions) }}</h3>
+                <a href="{{ route('admin.competitions.index', ['status' => 'pending']) }}" class="inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 font-medium mt-2">
+                    Kurasi Sekarang <i data-lucide="arrow-right" class="w-3 h-3"></i>
                 </a>
             </div>
-            <div class="w-12 h-12 rounded-xl {{ $unreadCS > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-slate-800 text-slate-400' }} border flex items-center justify-center">
-                <i data-lucide="message-square" class="w-6 h-6"></i>
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                <i data-lucide="clock" class="w-6 h-6"></i>
             </div>
         </div>
 
-        <!-- Server / System -->
+        <!-- Lomba Disetujui (Approved) -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status Backend</p>
-                <h3 class="text-base font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Online
-                </h3>
-                <span class="text-xs text-slate-500 font-medium mt-2 block">
-                    Laravel v{{ app()->version() }}
-                </span>
+                <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Disetujui & Tayang</p>
+                <h3 class="text-2xl font-bold text-emerald-400 mt-1">{{ number_format($approvedCompetitions) }}</h3>
+                <a href="{{ route('admin.competitions.index', ['status' => 'approved']) }}" class="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-medium mt-2">
+                    Lihat Lomba Aktif <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                </a>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
-                <i data-lucide="server" class="w-6 h-6"></i>
+                <i data-lucide="check-circle" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Lomba Ditolak (Rejected) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Ditolak / Revisi</p>
+                <h3 class="text-2xl font-bold text-rose-400 mt-1">{{ number_format($rejectedCompetitions) }}</h3>
+                <a href="{{ route('admin.competitions.index', ['status' => 'rejected']) }}" class="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 font-medium mt-2">
+                    Lihat Catatan <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                </a>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center">
+                <i data-lucide="x-circle" class="w-6 h-6"></i>
             </div>
         </div>
     </div>
 
-    <!-- MAIN TWO COLUMNS GRID -->
+    <!-- ── SECONDARY STATS (Kategori, Prodi, CS, User) ── -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <a href="{{ route('admin.categories.index') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="tags" class="w-3.5 h-3.5 text-orange-400"></i> Kategori Lomba
+            </span>
+            <p class="text-lg font-bold text-white mt-1">{{ $totalCategories }} Kategori</p>
+        </a>
+
+        <a href="{{ route('admin.study-programs.index') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-orange-400"></i> Program Studi
+            </span>
+            <p class="text-lg font-bold text-white mt-1">{{ $totalPrograms }} Prodi UMPKU</p>
+        </a>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-blue-400"></i> Mahasiswa / User
+            </span>
+            <p class="text-lg font-bold text-white mt-1">{{ $totalUsers }} Terdaftar</p>
+        </div>
+
+        <a href="{{ route('admin.cs.index') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-400"></i> Pesan CS Menunggu
+            </span>
+            <p class="text-lg font-bold text-white mt-1">{{ $unreadCS }} Belum Dibaca</p>
+        </a>
+    </div>
+
+    <!-- ── MAIN TWO COLUMNS GRID ── -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Kiri: Berita Terbaru (2 Kolom) -->
+        <!-- Kiri: Antrean Verifikasi Lomba (2 Kolom) -->
         <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <div class="flex items-center justify-between mb-5">
                 <div>
-                    <h3 class="text-base font-bold text-white">Berita Terbaru</h3>
-                    <p class="text-xs text-slate-400">Daftar publikasi artikel teranyar di portal berita</p>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="inbox" class="w-4 h-4 text-orange-500"></i>
+                        <span>Antrean Lomba Perlu Kurasi</span>
+                    </h3>
+                    <p class="text-xs text-slate-400">Informasi lomba yang baru dikirimkan mahasiswa dan menunggu verifikasi admin</p>
                 </div>
-                <a href="{{ route('admin.news.create') }}" 
-                   class="inline-flex items-center gap-2 px-3.5 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-600/20 transition-colors">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                    Tambah Berita
+                <a href="{{ route('admin.competitions.index', ['status' => 'pending']) }}" 
+                   class="text-xs text-orange-400 hover:text-orange-300 font-semibold inline-flex items-center gap-1">
+                    Semua Antrean ({{ $pendingCompetitions }}) <i data-lucide="arrow-right" class="w-3 h-3"></i>
                 </a>
             </div>
 
-            @if($latestNews->isEmpty())
+            @if($pendingList->isEmpty())
                 <div class="text-center py-12 text-slate-500 text-sm">
-                    <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                    Belum ada berita yang diterbitkan.
+                    <i data-lucide="check-circle-2" class="w-10 h-10 mx-auto mb-2 text-emerald-500 opacity-60"></i>
+                    Semua antrean bersih! Tidak ada pengajuan lomba yang menunggu verifikasi.
                 </div>
             @else
                 <div class="divide-y divide-slate-800/80">
-                    @foreach($latestNews as $item)
-                        <div class="py-3.5 flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-3.5 min-w-0">
-                                @if($item->image)
-                                    <img src="{{ $item->image }}" alt="" class="w-12 h-12 rounded-lg object-cover shrink-0 bg-slate-800">
+                    @foreach($pendingList as $item)
+                        <div class="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3.5 min-w-0">
+                                @if($item->poster)
+                                    <img src="{{ asset($item->poster_url) }}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0 bg-slate-800 border border-slate-700">
                                 @else
-                                    <div class="w-12 h-12 rounded-lg bg-slate-800 text-slate-500 flex items-center justify-center shrink-0">
+                                    <div class="w-14 h-14 rounded-xl bg-slate-800 text-slate-500 flex items-center justify-center shrink-0 border border-slate-700">
                                         <i data-lucide="image" class="w-5 h-5"></i>
                                     </div>
                                 @endif
-                                <div class="min-w-0">
-                                    <a href="{{ route('admin.news.edit', $item->id) }}" class="text-sm font-semibold text-slate-200 hover:text-orange-400 truncate block transition-colors">
+                                <div class="min-w-0 space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                            Pending
+                                        </span>
+                                        <span class="text-[11px] text-slate-400 font-medium">
+                                            {{ $item->competition_level }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ route('admin.competitions.show', $item->id) }}" class="text-sm font-bold text-slate-200 hover:text-orange-400 truncate block transition-colors">
                                         {{ $item->title }}
                                     </a>
-                                    <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                                        <span>Oleh: <strong class="text-slate-400">{{ $item->author ?? 'Redaksi' }}</strong></span>
+                                    <p class="text-xs text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                        <span>Penyelenggara: <strong class="text-slate-300">{{ $item->organizer }}</strong></span>
                                         <span>•</span>
-                                        <span>{{ $item->created_at->translatedFormat('d M Y') }}</span>
+                                        <span>Pengirim: {{ $item->user->name ?? 'Mahasiswa' }}</span>
                                     </p>
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <a href="{{ route('admin.news.edit', $item->id) }}" 
-                                   class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-                                   title="Edit Berita">
-                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                <a href="{{ route('admin.competitions.show', $item->id) }}" 
+                                   class="px-3.5 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-600/20 transition-colors inline-flex items-center gap-1.5">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                    <span>Review & Moderasi</span>
                                 </a>
                             </div>
                         </div>
                     @endforeach
                 </div>
-
-                <div class="mt-4 pt-4 border-t border-slate-800 text-center">
-                    <a href="{{ route('admin.news.index') }}" class="text-xs text-orange-400 hover:text-orange-300 font-semibold inline-flex items-center gap-1">
-                        Lihat Seluruh Berita ({{ $totalNews }}) <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
             @endif
         </div>
 
-        <!-- Kanan: Pesan CS Terbaru (1 Kolom) -->
+        <!-- Kanan: Chat CS Mahasiswa Terbaru (1 Kolom) -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <div class="flex items-center justify-between mb-5">
                 <div>
-                    <h3 class="text-base font-bold text-white">Chat User Terbaru</h3>
-                    <p class="text-xs text-slate-400">Pertanyaan dan masukan dari pembaca</p>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="message-square" class="w-4 h-4 text-purple-400"></i>
+                        <span>Chat Pengguna Terbaru</span>
+                    </h3>
+                    <p class="text-xs text-slate-400">Pertanyaan dan konsultasi mahasiswa</p>
                 </div>
                 <a href="{{ route('admin.cs.index') }}" class="text-xs text-orange-400 hover:text-orange-300 font-semibold">
                     Semua
@@ -178,4 +215,3 @@
 
 </div>
 @endsection
-

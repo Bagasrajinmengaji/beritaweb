@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Admin Panel') — Portal Berita</title>
+    <title>@yield('title', 'Admin Panel') — Portal Lomba UMPKU Surakarta</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -40,28 +40,55 @@
             <!-- Brand Logo -->
             <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-800">
                 <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600 text-white font-black text-base shadow-lg shadow-orange-600/30">
-                    PB
+                    <i data-lucide="trophy" class="w-5 h-5 text-white"></i>
                 </span>
                 <div>
-                    <h1 class="font-bold text-sm tracking-tight text-white leading-tight">Portal Berita</h1>
-                    <span class="text-[11px] font-semibold text-orange-400 uppercase tracking-wider">Admin Panel</span>
+                    <h1 class="font-bold text-sm tracking-tight text-white leading-tight">Portal Lomba</h1>
+                    <span class="text-[10px] font-semibold text-orange-400 uppercase tracking-wider">UMPKU Surakarta</span>
                 </div>
             </div>
 
             <!-- Nav Links -->
             <nav class="p-4 space-y-1.5 text-sm font-medium">
+                <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}" 
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                     <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="{{ route('admin.news.index') }}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors {{ request()->routeIs('admin.news.*') ? 'bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
-                    <i data-lucide="newspaper" class="w-4 h-4"></i>
-                    <span>Kelola Berita</span>
+                <!-- Kelola Lomba (Dengan Live Badge Pending) -->
+                @php
+                    $pendingBadge = \App\Models\Competition::where('status', 'pending')->count();
+                @endphp
+                <a href="{{ route('admin.competitions.index') }}" 
+                   class="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-colors {{ request()->routeIs('admin.competitions.*') ? 'bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                        <span>Kelola Lomba</span>
+                    </div>
+                    @if($pendingBadge > 0)
+                        <span class="px-2 py-0.5 text-xs font-bold bg-amber-500 text-slate-950 rounded-full animate-pulse" title="{{ $pendingBadge }} lomba butuh kurasi">
+                            {{ $pendingBadge }}
+                        </span>
+                    @endif
                 </a>
 
+                <!-- Kategori Lomba -->
+                <a href="{{ route('admin.categories.index') }}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors {{ request()->routeIs('admin.categories.*') ? 'bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                    <i data-lucide="tags" class="w-4 h-4"></i>
+                    <span>Kategori Lomba</span>
+                </a>
+
+                <!-- Program Studi UMPKU -->
+                <a href="{{ route('admin.study-programs.index') }}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors {{ request()->routeIs('admin.study-programs.*') ? 'bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                    <span>Program Studi</span>
+                </a>
+
+                <!-- Customer Service Chat -->
                 <a href="{{ route('admin.cs.index') }}" 
                    class="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-colors {{ request()->routeIs('admin.cs.*') ? 'bg-orange-600 text-white font-semibold shadow-md shadow-orange-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                     <div class="flex items-center gap-3">
@@ -69,11 +96,11 @@
                         <span>Customer Service</span>
                     </div>
                     @php
-                        $unreadBadge = \App\Models\CustomerServiceMessage::where('sender', 'user')->where('is_read_by_admin', false)->count();
+                        $unreadCSBadge = \App\Models\CustomerServiceMessage::where('sender', 'user')->where('is_read_by_admin', false)->count();
                     @endphp
-                    @if($unreadBadge > 0)
+                    @if($unreadCSBadge > 0)
                         <span class="px-2 py-0.5 text-xs font-bold bg-rose-500 text-white rounded-full animate-pulse">
-                            {{ $unreadBadge }}
+                            {{ $unreadCSBadge }}
                         </span>
                     @endif
                 </a>
@@ -87,7 +114,7 @@
                class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/70 hover:bg-slate-800 hover:text-orange-400 transition-colors border border-slate-700/60">
                 <span class="flex items-center gap-2">
                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                    Buka Web Pengguna (FE)
+                    Buka Web Publik (Next.js)
                 </span>
                 <span class="text-[10px] text-slate-400">Port 3000</span>
             </a>
@@ -126,7 +153,7 @@
             <div class="flex items-center gap-4 text-xs text-slate-400">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Backend Aktif (Port 8000)
+                    Backend Aktif (Laravel 12 • Port 8000)
                 </div>
             </div>
         </header>
@@ -160,4 +187,3 @@
     @stack('scripts')
 </body>
 </html>
-
