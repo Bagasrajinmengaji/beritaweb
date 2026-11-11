@@ -331,7 +331,7 @@ export default function LombaDetailPage({
 
         {/* ── Main Layout: 2 Kolom (Konten Kiri, Sidebar Aksi Kanan) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Kolom Kiri: Poster, Deskripsi, Persyaratan, Prodi */}
+          {/* Kolom Kiri: Poster, Ringkasan Cepat Mobile, Deskripsi, Persyaratan, Prodi */}
           <div className="lg:col-span-2 space-y-8">
             {/* Poster Lomba */}
             <div className="relative aspect-video sm:aspect-16/10 w-full rounded-3xl overflow-hidden bg-stone-100 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-800 shadow-md">
@@ -344,6 +344,71 @@ export default function LombaDetailPage({
                 className="object-contain"
                 unoptimized={posterSrc.startsWith('http://127')}
               />
+            </div>
+
+            {/* ── Ringkasan Kunci & Aksi Pendaftaran Mobile (Tampil di atas Deskripsi pada Layar HP) ── */}
+            <div className="lg:hidden bg-linear-to-br from-orange-50/80 to-amber-50/50 dark:from-zinc-900 dark:to-zinc-900/80 border-2 border-orange-200/80 dark:border-orange-950/60 rounded-3xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between gap-2 border-b border-orange-200/60 dark:border-zinc-800 pb-3">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400">
+                    Batas Pendaftaran
+                  </span>
+                  <p className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100">
+                    {formatDate(competition.registration_deadline)}
+                  </p>
+                </div>
+                <div>
+                  <DeadlineBadge
+                    status={competition.registration_status}
+                    daysRemaining={competition.days_remaining}
+                    size="sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+                    Biaya Registrasi
+                  </span>
+                  <p className="text-lg font-black text-orange-600 dark:text-orange-400">
+                    {competition.registration_fee || 'Gratis'}
+                  </p>
+                </div>
+
+                <a
+                  href={competition.registration_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-11 px-5 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 active:scale-98 shrink-0"
+                >
+                  <span>Daftar Sekarang</span>
+                  <ExternalLink size={13} />
+                </a>
+              </div>
+
+              {competition.study_programs && competition.study_programs.length > 0 && (
+                <div className="pt-2 border-t border-orange-200/40 dark:border-zinc-800">
+                  <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 block mb-1">
+                    Sasaran Program Studi:
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {competition.study_programs.slice(0, 3).map((p) => (
+                      <span
+                        key={p.id}
+                        className="text-[10px] font-semibold bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-2 py-0.5 rounded-lg border border-stone-200 dark:border-zinc-700"
+                      >
+                        {p.name}
+                      </span>
+                    ))}
+                    {competition.study_programs.length > 3 && (
+                      <span className="text-[10px] text-orange-600 dark:text-orange-400 font-semibold self-center">
+                        +{competition.study_programs.length - 3} prodi lain
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Deskripsi Lomba */}
@@ -489,6 +554,32 @@ export default function LombaDetailPage({
             </div>
           </aside>
         </div>
+      </div>
+
+      {/* ── Sticky Bottom Bar Pendaftaran (Mobile Only) ── */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-stone-200 dark:border-zinc-800 px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xl">
+        <div className="min-w-0">
+          <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate">
+            {competition.registration_fee || 'Gratis'} • Batas: {formatDate(competition.registration_deadline)}
+          </span>
+          <div className="pt-0.5">
+            <DeadlineBadge
+              status={competition.registration_status}
+              daysRemaining={competition.days_remaining}
+              size="sm"
+            />
+          </div>
+        </div>
+
+        <a
+          href={competition.registration_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="min-h-10 px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 active:scale-95 shrink-0"
+        >
+          <span>Daftar Lomba</span>
+          <ExternalLink size={13} />
+        </a>
       </div>
     </main>
   );

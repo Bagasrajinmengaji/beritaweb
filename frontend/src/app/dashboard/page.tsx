@@ -61,6 +61,7 @@ export default function UserDashboardPage() {
   // State Modal Edit / Perbaikan
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingComp, setEditingComp] = useState<CompetitionDetail | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     title: '',
     category_id: '',
@@ -186,6 +187,19 @@ export default function UserDashboardPage() {
       return;
     }
 
+    const sanitizeUrl = (url: string) => {
+      const trimmed = url.trim();
+      if (!trimmed) return '';
+      if (/^https?:\/\//i.test(trimmed)) return trimmed;
+      return `https://${trimmed}`;
+    };
+
+    const payload = {
+      ...editFormData,
+      registration_url: sanitizeUrl(editFormData.registration_url),
+      source_url: editFormData.source_url ? sanitizeUrl(editFormData.source_url) : '',
+    };
+
     setIsUpdating(true);
     setEditError(null);
 
@@ -197,7 +211,7 @@ export default function UserDashboardPage() {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -207,6 +221,8 @@ export default function UserDashboardPage() {
 
       setEditModalOpen(false);
       setEditingComp(null);
+      setToastMessage('Perubahan berhasil dikirimkan kembali ke Admin untuk diverifikasi ulang.');
+      setTimeout(() => setToastMessage(null), 4000);
       fetchMyCompetitions();
     } catch (err: unknown) {
       setEditError(err instanceof Error ? err.message : 'Terjadi kendala saat menyimpan perbaikan.');
@@ -347,6 +363,23 @@ export default function UserDashboardPage() {
 
       {/* ── Content Area: Tab Filter & List Kartu ── */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        {/* Toast Notifikasi Sukses */}
+        {toastMessage && (
+          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between gap-2 shadow-sm animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{toastMessage}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 p-1"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
         {/* Tab Filter Status */}
         <div className="flex border-b border-stone-200 dark:border-zinc-800 gap-1 overflow-x-auto pb-px">
           {[
@@ -538,54 +571,78 @@ export default function UserDashboardPage() {
         )}
       </div>
 
-      {/* ── Modal Edit / Perbaikan Lomba ── */}
-      {editModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-3xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 p-6 sm:p-8 shadow-2xl my-8 space-y-5">
-            <div className="flex items-center justify-between border-b border-stone-100 dark:border-zinc-800 pb-3">
+      {/* ── Modal Edit / Perbaikan Lomba (Mobile Optimized) ── */}
+      {editModalOpen && editingComp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-3xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header (Sticky) */}
+            <div className="flex items-center justify-between border-b border-stone-100 dark:border-zinc-800 px-5 py-4 bg-stone-50/50 dark:bg-zinc-950/40 shrink-0">
               <div>
-                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                  Perbaiki Informasi Lomba
+                <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  <Edit3 size={18} className="text-orange-600" />
+                  <span>{editingComp.status === 'rejected' ? 'Perbaiki Pengajuan Lomba' : 'Edit Informasi Lomba'}</span>
                 </h3>
-                <p className="text-xs text-stone-500">
-                  Perubahan akan otomatis dikirimkan kembali ke admin untuk diverifikasi ulang.
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Perubahan akan otomatis dikirimkan kembali ke admin untuk verifikasi ulang.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setEditModalOpen(false)}
-                className="p-1 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
+                aria-label="Tutup form edit"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {editError && (
-              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle size={15} />
-                <span>{editError}</span>
-              </div>
-            )}
+            {/* Modal Scrollable Body */}
+            <form id="editCompForm" onSubmit={handleSaveEdit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+              {/* Highlight Catatan Penolakan jika ada */}
+              {editingComp.status === 'rejected' && editingComp.rejection_reason && (
+                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-xs text-red-800 dark:text-red-200 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center gap-1.5 font-bold text-red-700 dark:text-red-300">
+                    <AlertTriangle size={16} />
+                    <span>Catatan Verifikator yang Perlu Diperbaiki:</span>
+                  </div>
+                  <p className="leading-relaxed pl-5 font-medium">{editingComp.rejection_reason}</p>
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400 pl-5 pt-0.5">
+                    Silakan sesuaikan kolom yang bersangkutan di bawah ini, lalu klik &ldquo;Kirim Ulang Verifikasi&rdquo;.
+                  </p>
+                </div>
+              )}
 
-            <form onSubmit={handleSaveEdit} className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
+              {editError && (
+                <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{editError}</span>
+                </div>
+              )}
+
+              {/* Judul */}
               <div>
-                <label className="block text-xs font-bold mb-1">Judul Lomba *</label>
+                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                  Judul Kompetisi / Lomba *
+                </label>
                 <input
                   type="text"
                   value={editFormData.title}
                   onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
+                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                   required
                 />
               </div>
 
+              {/* Kategori & Penyelenggara */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold mb-1">Kategori *</label>
+                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                    Kategori Bidang *
+                  </label>
                   <select
                     value={editFormData.category_id}
                     onChange={(e) => setEditFormData({ ...editFormData, category_id: e.target.value })}
-                    className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
+                    className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
                   >
                     <option value="">Pilih Kategori...</option>
                     {categories.map((c) => (
@@ -597,79 +654,139 @@ export default function UserDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold mb-1">Penyelenggara *</label>
+                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                    Penyelenggara *
+                  </label>
                   <input
                     type="text"
                     value={editFormData.organizer}
                     onChange={(e) => setEditFormData({ ...editFormData, organizer: e.target.value })}
-                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
+                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
                     required
                   />
                 </div>
               </div>
 
+              {/* Biaya & Deadline */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                    Biaya Pendaftaran
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.registration_fee}
+                    onChange={(e) => setEditFormData({ ...editFormData, registration_fee: e.target.value })}
+                    placeholder="Gratis atau Rp 50.000"
+                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                    Batas Akhir Pendaftaran (Deadline) *
+                  </label>
+                  <input
+                    type="date"
+                    value={editFormData.registration_deadline}
+                    onChange={(e) => setEditFormData({ ...editFormData, registration_deadline: e.target.value })}
+                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Deskripsi */}
               <div>
-                <label className="block text-xs font-bold mb-1">Deskripsi *</label>
+                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                  Deskripsi Lengkap *
+                </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   value={editFormData.description}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="w-full p-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
+                  className="w-full p-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
 
+              {/* Persyaratan & Ketentuan */}
               <div>
-                <label className="block text-xs font-bold mb-1">Batas Akhir Pendaftaran (Deadline) *</label>
-                <input
-                  type="date"
-                  value={editFormData.registration_deadline}
-                  onChange={(e) => setEditFormData({ ...editFormData, registration_deadline: e.target.value })}
-                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
-                  required
+                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                  Persyaratan & Ketentuan Peserta
+                </label>
+                <textarea
+                  rows={3}
+                  value={editFormData.requirements}
+                  onChange={(e) => setEditFormData({ ...editFormData, requirements: e.target.value })}
+                  placeholder="Contoh: Mahasiswa aktif S1/D3, KTM aktif, maksimal 3 orang per tim..."
+                  className="w-full p-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
                 />
               </div>
 
+              {/* Link Pendaftaran & Kontak */}
               <div>
-                <label className="block text-xs font-bold mb-1">Link Pendaftaran Resmi *</label>
-                <input
-                  type="url"
-                  value={editFormData.registration_url}
-                  onChange={(e) => setEditFormData({ ...editFormData, registration_url: e.target.value })}
-                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1">Kontak Narahubung</label>
+                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                  Link Formulir Pendaftaran Resmi *
+                </label>
                 <input
                   type="text"
-                  value={editFormData.contact}
-                  onChange={(e) => setEditFormData({ ...editFormData, contact: e.target.value })}
-                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700"
-                  placeholder="0812-xxxx-xxxx"
+                  value={editFormData.registration_url}
+                  onChange={(e) => setEditFormData({ ...editFormData, registration_url: e.target.value })}
+                  placeholder="https://bit.ly/daftar-lomba atau link resmi"
+                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
+                  required
                 />
               </div>
 
-              <div className="pt-4 border-t border-stone-100 dark:border-zinc-800 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="min-h-11 px-4 rounded-xl border border-stone-300 dark:border-zinc-700 text-xs font-semibold"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
-                >
-                  {isUpdating ? <Loader2 size={14} className="animate-spin" /> : null}
-                  <span>Kirim Ulang Verifikasi</span>
-                </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                    Kontak Narahubung
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.contact}
+                    onChange={(e) => setEditFormData({ ...editFormData, contact: e.target.value })}
+                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
+                    placeholder="0812-xxxx-xxxx (WA)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
+                    Sumber Informasi / Web Penyelenggara
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.source_url}
+                    onChange={(e) => setEditFormData({ ...editFormData, source_url: e.target.value })}
+                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
+                    placeholder="https://..."
+                  />
+                </div>
               </div>
             </form>
+
+            {/* Modal Footer (Sticky) */}
+            <div className="p-4 sm:px-6 border-t border-stone-100 dark:border-zinc-800 bg-stone-50/80 dark:bg-zinc-950/80 flex items-center justify-end gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(false)}
+                className="min-h-11 px-4 rounded-xl border border-stone-300 dark:border-zinc-700 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                form="editCompForm"
+                disabled={isUpdating}
+                className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+              >
+                {isUpdating ? <Loader2 size={14} className="animate-spin" /> : null}
+                <span>Kirim Ulang Verifikasi</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
