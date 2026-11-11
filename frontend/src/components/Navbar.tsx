@@ -192,10 +192,12 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             {/* Dark mode toggle */}
             <button
+              type="button"
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-200/60 dark:hover:bg-zinc-900 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-              aria-label={isDark ? 'Beralih ke mode terang' : 'Beralih ke mode gelap'}
-              title={isDark ? 'Mode terang' : 'Mode gelap'}
+              aria-label={mounted ? (isDark ? 'Beralih ke mode terang' : 'Beralih ke mode gelap') : 'Ganti tema'}
+              title={mounted ? (isDark ? 'Mode terang' : 'Mode gelap') : 'Ganti tema'}
+              suppressHydrationWarning
             >
               {mounted ? (
                 isDark ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />
