@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, Building2, GraduationCap, Tag, ArrowRight } from 'lucide-react';
+import { Calendar, Building2, GraduationCap, Tag, ArrowRight, Bookmark } from 'lucide-react';
 import { CompetitionListItem } from '@/types/competition';
 import { DeadlineBadge } from './DeadlineBadge';
 
@@ -35,6 +36,34 @@ function getPosterSrc(posterPath?: string | null): string {
 
 export function CompetitionCard({ competition, index = 0 }: CompetitionCardProps) {
   const posterSrc = getPosterSrc(competition.poster_url);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('umpku_bookmarked_ids');
+      if (stored) {
+        const ids: number[] = JSON.parse(stored);
+        setIsBookmarked(ids.includes(competition.id));
+      }
+    } catch {}
+  }, [competition.id]);
+
+  const handleToggleBookmark = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const stored = localStorage.getItem('umpku_bookmarked_ids');
+      let ids: number[] = stored ? JSON.parse(stored) : [];
+      if (ids.includes(competition.id)) {
+        ids = ids.filter((id) => id !== competition.id);
+        setIsBookmarked(false);
+      } else {
+        ids.push(competition.id);
+        setIsBookmarked(true);
+      }
+      localStorage.setItem('umpku_bookmarked_ids', JSON.stringify(ids));
+    } catch {}
+  };
 
   return (
     <article className="group card-lift rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 hover:border-orange-500/50 dark:hover:border-orange-500/50 transition-all duration-200 flex flex-col shadow-xs hover:shadow-md">
@@ -58,6 +87,17 @@ export function CompetitionCard({ competition, index = 0 }: CompetitionCardProps
             {competition.competition_level}
           </span>
         </div>
+
+        {/* Bookmark button (Top Right) */}
+        <button
+          type="button"
+          onClick={handleToggleBookmark}
+          aria-label={isBookmarked ? 'Hapus dari simpanan' : 'Simpan informasi lomba'}
+          title={isBookmarked ? 'Hapus bookmark' : 'Simpan lomba'}
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/70 hover:bg-zinc-900 text-white backdrop-blur-md transition-all shadow-sm active:scale-90 z-10 cursor-pointer"
+        >
+          <Bookmark size={14} className={isBookmarked ? 'fill-orange-500 text-orange-500' : 'text-white'} />
+        </button>
 
         {/* Category badge (Bottom Left overlay) */}
         {competition.category && (

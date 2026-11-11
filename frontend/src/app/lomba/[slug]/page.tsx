@@ -21,9 +21,33 @@ import {
   Trophy,
   CheckCircle2,
   MessageCircle,
+  Bookmark,
+  CalendarPlus,
+  Flag,
 } from 'lucide-react';
 import { CompetitionDetail } from '@/types/competition';
 import { DeadlineBadge } from '@/components/DeadlineBadge';
+
+function getGoogleCalendarUrl(competition: CompetitionDetail): string {
+  if (!competition.registration_deadline) return '';
+  try {
+    const deadlineDate = new Date(competition.registration_deadline);
+    const yyyy = deadlineDate.getFullYear();
+    const mm = String(deadlineDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(deadlineDate.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}${mm}${dd}`;
+
+    const title = encodeURIComponent(`[Deadline Lomba] ${competition.title}`);
+    const details = encodeURIComponent(
+      `Penyelenggara: ${competition.organizer}\nBiaya: ${competition.registration_fee || 'Gratis'}\nLink Pendaftaran: ${competition.registration_url}\n\nDipantau via Portal Lomba Mahasiswa UMPKU Surakarta.`
+    );
+    const location = encodeURIComponent(competition.organizer);
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}&location=${location}`;
+  } catch {
+    return '';
+  }
+}
 
 function formatDate(isoDate?: string | null): string {
   if (!isoDate) return '-';
@@ -59,6 +83,35 @@ export default function LombaDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // Bookmark sync with localStorage
+  useEffect(() => {
+    if (!competition) return;
+    try {
+      const stored = localStorage.getItem('umpku_bookmarked_ids');
+      if (stored) {
+        const ids: number[] = JSON.parse(stored);
+        setIsBookmarked(ids.includes(competition.id));
+      }
+    } catch {}
+  }, [competition]);
+
+  const handleToggleBookmark = () => {
+    if (!competition) return;
+    try {
+      const stored = localStorage.getItem('umpku_bookmarked_ids');
+      let ids: number[] = stored ? JSON.parse(stored) : [];
+      if (ids.includes(competition.id)) {
+        ids = ids.filter((id) => id !== competition.id);
+        setIsBookmarked(false);
+      } else {
+        ids.push(competition.id);
+        setIsBookmarked(true);
+      }
+      localStorage.setItem('umpku_bookmarked_ids', JSON.stringify(ids));
+    } catch {}
+  };
 
   // Text-To-Speech (Aksesibilitas Suara)
   const [speechState, setSpeechState] = useState<'idle' | 'playing' | 'paused'>('idle');
@@ -258,6 +311,21 @@ export default function LombaDetailPage({
                 </button>
               )}
             </div>
+
+            {/* Bookmark button */}
+            <button
+              type="button"
+              onClick={handleToggleBookmark}
+              className={`inline-flex items-center gap-1.5 min-h-9 px-3 rounded-xl border text-xs font-semibold transition-colors ${
+                isBookmarked
+                  ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300'
+                  : 'border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-800 text-stone-700 dark:text-stone-300 hover:border-orange-500'
+              }`}
+              title={isBookmarked ? 'Hapus dari simpanan' : 'Simpan lomba ini'}
+            >
+              <Bookmark size={13} className={isBookmarked ? 'fill-orange-600 text-orange-600' : ''} />
+              <span>{isBookmarked ? 'Tersimpan' : 'Simpan'}</span>
+            </button>
 
             {/* Share button */}
             <button
@@ -496,7 +564,7 @@ export default function LombaDetailPage({
               </div>
 
               {/* Tombol Daftar Lomba Utama */}
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2.5 pt-2">
                 <a
                   href={competition.registration_url}
                   target="_blank"
@@ -506,7 +574,21 @@ export default function LombaDetailPage({
                   <span>Daftar Lomba Sekarang</span>
                   <ExternalLink size={15} />
                 </a>
-                <p className="text-[11px] text-center text-stone-500 dark:text-stone-400">
+
+                {/* Tombol Pengingat Google Kalender */}
+                {competition.registration_deadline && (
+                  <a
+                    href={getGoogleCalendarUrl(competition)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-h-10 w-full flex items-center justify-center gap-2 rounded-2xl border border-stone-200 dark:border-zinc-700 hover:border-orange-500 bg-stone-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 font-semibold text-xs transition-colors"
+                  >
+                    <CalendarPlus size={14} className="text-orange-500" />
+                    <span>Pasang Pengingat di Google Kalender</span>
+                  </a>
+                )}
+
+                <p className="text-[11px] text-center text-stone-500 dark:text-stone-400 pt-1">
                   Tautan resmi menuju form pendaftaran penyelenggara.
                 </p>
               </div>
@@ -547,10 +629,23 @@ export default function LombaDetailPage({
 
               {/* Pengirim */}
               {competition.author && (
-                <div className="pt-2 border-t border-stone-100 dark:border-zinc-800 text-[11px] text-stone-500">
+                <div className="pt-2 border-t border-stone-100 dark:border-zinc-800 text-[11px] text-stone-500 flex items-center justify-between">
                   <span>Diajukan oleh: {competition.author.name}</span>
                 </div>
               )}
+
+              {/* Pelaporan Tautan / Info */}
+              <div className="pt-2 border-t border-stone-100 dark:border-zinc-800">
+                <a
+                  href={`https://wa.me/6281200000000?text=${encodeURIComponent(`Halo Admin UMPKU, saya ingin melaporkan informasi atau kendala pendaftaran pada lomba: ${competition.title}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                >
+                  <Flag size={12} />
+                  <span>Laporkan jika informasi / tautan tidak valid</span>
+                </a>
+              </div>
             </div>
           </aside>
         </div>
