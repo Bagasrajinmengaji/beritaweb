@@ -12,18 +12,16 @@ import {
   ExternalLink,
   Edit3,
   Trash2,
-  AlertCircle,
   Calendar,
   Building2,
-  Tag,
   Lock,
   ArrowRight,
-  RefreshCw,
   X,
-  Loader2,
   AlertTriangle,
 } from 'lucide-react';
-import { CompetitionDetail, Category, StudyProgram } from '@/types/competition';
+import { CompetitionDetail, Category } from '@/types/competition';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { EditCompetitionModal } from '@/components/dashboard/EditCompetitionModal';
 
 function formatDate(isoDate?: string | null): string {
   if (!isoDate) return '-';
@@ -62,20 +60,6 @@ export default function UserDashboardPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingComp, setEditingComp] = useState<CompetitionDetail | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    title: '',
-    category_id: '',
-    organizer: '',
-    description: '',
-    requirements: '',
-    registration_deadline: '',
-    registration_url: '',
-    registration_fee: '',
-    contact: '',
-    source_url: '',
-  });
-  const [editError, setEditError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   // State Modal Konfirmasi Hapus
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -157,78 +141,7 @@ export default function UserDashboardPage() {
   // Buka Modal Edit
   const handleOpenEdit = (comp: CompetitionDetail) => {
     setEditingComp(comp);
-    setEditFormData({
-      title: comp.title,
-      category_id: comp.category?.id ? comp.category.id.toString() : '',
-      organizer: comp.organizer,
-      description: comp.description || '',
-      requirements: comp.requirements || '',
-      registration_deadline: comp.registration_deadline || '',
-      registration_url: comp.registration_url || '',
-      registration_fee: comp.registration_fee || '',
-      contact: comp.contact || '',
-      source_url: comp.source_url || '',
-    });
-    setEditError(null);
     setEditModalOpen(true);
-  };
-
-  // Submit Update / Perbaikan
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingComp || !token) return;
-
-    if (!editFormData.title.trim()) {
-      setEditError('Judul lomba wajib diisi.');
-      return;
-    }
-    if (!editFormData.registration_url.trim()) {
-      setEditError('Tautan pendaftaran resmi wajib diisi.');
-      return;
-    }
-
-    const sanitizeUrl = (url: string) => {
-      const trimmed = url.trim();
-      if (!trimmed) return '';
-      if (/^https?:\/\//i.test(trimmed)) return trimmed;
-      return `https://${trimmed}`;
-    };
-
-    const payload = {
-      ...editFormData,
-      registration_url: sanitizeUrl(editFormData.registration_url),
-      source_url: editFormData.source_url ? sanitizeUrl(editFormData.source_url) : '',
-    };
-
-    setIsUpdating(true);
-    setEditError(null);
-
-    try {
-      const res = await fetch(`${API}/competitions/${editingComp.id}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.message || 'Gagal menyimpan perubahan.');
-      }
-
-      setEditModalOpen(false);
-      setEditingComp(null);
-      setToastMessage('Perubahan berhasil dikirimkan kembali ke Admin untuk diverifikasi ulang.');
-      setTimeout(() => setToastMessage(null), 4000);
-      fetchMyCompetitions();
-    } catch (err: unknown) {
-      setEditError(err instanceof Error ? err.message : 'Terjadi kendala saat menyimpan perbaikan.');
-    } finally {
-      setIsUpdating(false);
-    }
   };
 
   // Konfirmasi & Eksekusi Hapus
@@ -313,51 +226,13 @@ export default function UserDashboardPage() {
             </Link>
           </div>
 
-          {/* ── Kartu Statistik Ringkasan ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 pt-8">
-            {/* Total */}
-            <div className="p-4 rounded-2xl bg-stone-50 dark:bg-zinc-800/60 border border-stone-200/80 dark:border-zinc-700 space-y-1">
-              <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
-                Total Pengajuan
-              </span>
-              <p className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">
-                {totalCount}
-              </p>
-            </div>
-
-            {/* Pending */}
-            <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 space-y-1">
-              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                <Clock size={12} />
-                <span>Menunggu Verifikasi</span>
-              </span>
-              <p className="text-2xl font-extrabold text-amber-700 dark:text-amber-400">
-                {pendingCount}
-              </p>
-            </div>
-
-            {/* Approved */}
-            <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 space-y-1">
-              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                <CheckCircle2 size={12} />
-                <span>Disetujui & Tayang</span>
-              </span>
-              <p className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400">
-                {approvedCount}
-              </p>
-            </div>
-
-            {/* Rejected */}
-            <div className="p-4 rounded-2xl bg-red-50/70 dark:bg-red-950/30 border border-red-200/80 dark:border-red-900/40 space-y-1">
-              <span className="text-[11px] font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider flex items-center gap-1">
-                <XCircle size={12} />
-                <span>Perlu Perbaikan</span>
-              </span>
-              <p className="text-2xl font-extrabold text-red-700 dark:text-red-400">
-                {rejectedCount}
-              </p>
-            </div>
-          </div>
+          {/* ── Kartu Statistik Ringkasan (Extracted Component) ── */}
+          <DashboardStats
+            totalCount={totalCount}
+            pendingCount={pendingCount}
+            approvedCount={approvedCount}
+            rejectedCount={rejectedCount}
+          />
         </div>
       </section>
 
@@ -571,225 +446,23 @@ export default function UserDashboardPage() {
         )}
       </div>
 
-      {/* ── Modal Edit / Perbaikan Lomba (Mobile Optimized) ── */}
-      {editModalOpen && editingComp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-3xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header (Sticky) */}
-            <div className="flex items-center justify-between border-b border-stone-100 dark:border-zinc-800 px-5 py-4 bg-stone-50/50 dark:bg-zinc-950/40 shrink-0">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                  <Edit3 size={18} className="text-orange-600" />
-                  <span>{editingComp.status === 'rejected' ? 'Perbaiki Pengajuan Lomba' : 'Edit Informasi Lomba'}</span>
-                </h3>
-                <p className="text-xs text-stone-500 mt-0.5">
-                  Perubahan akan otomatis dikirimkan kembali ke admin untuk verifikasi ulang.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditModalOpen(false)}
-                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
-                aria-label="Tutup form edit"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Modal Scrollable Body */}
-            <form id="editCompForm" onSubmit={handleSaveEdit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
-              {/* Highlight Catatan Penolakan jika ada */}
-              {editingComp.status === 'rejected' && editingComp.rejection_reason && (
-                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-xs text-red-800 dark:text-red-200 space-y-1.5 shadow-2xs">
-                  <div className="flex items-center gap-1.5 font-bold text-red-700 dark:text-red-300">
-                    <AlertTriangle size={16} />
-                    <span>Catatan Verifikator yang Perlu Diperbaiki:</span>
-                  </div>
-                  <p className="leading-relaxed pl-5 font-medium">{editingComp.rejection_reason}</p>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400 pl-5 pt-0.5">
-                    Silakan sesuaikan kolom yang bersangkutan di bawah ini, lalu klik &ldquo;Kirim Ulang Verifikasi&rdquo;.
-                  </p>
-                </div>
-              )}
-
-              {editError && (
-                <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-                  <AlertCircle size={16} className="shrink-0" />
-                  <span>{editError}</span>
-                </div>
-              )}
-
-              {/* Judul */}
-              <div>
-                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                  Judul Kompetisi / Lomba *
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.title}
-                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
-                  required
-                />
-              </div>
-
-              {/* Kategori & Penyelenggara */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                    Kategori Bidang *
-                  </label>
-                  <select
-                    value={editFormData.category_id}
-                    onChange={(e) => setEditFormData({ ...editFormData, category_id: e.target.value })}
-                    className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="">Pilih Kategori...</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                    Penyelenggara *
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.organizer}
-                    onChange={(e) => setEditFormData({ ...editFormData, organizer: e.target.value })}
-                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Biaya & Deadline */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                    Biaya Pendaftaran
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.registration_fee}
-                    onChange={(e) => setEditFormData({ ...editFormData, registration_fee: e.target.value })}
-                    placeholder="Gratis atau Rp 50.000"
-                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                    Batas Akhir Pendaftaran (Deadline) *
-                  </label>
-                  <input
-                    type="date"
-                    value={editFormData.registration_deadline}
-                    onChange={(e) => setEditFormData({ ...editFormData, registration_deadline: e.target.value })}
-                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Deskripsi */}
-              <div>
-                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                  Deskripsi Lengkap *
-                </label>
-                <textarea
-                  rows={4}
-                  value={editFormData.description}
-                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="w-full p-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              {/* Persyaratan & Ketentuan */}
-              <div>
-                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                  Persyaratan & Ketentuan Peserta
-                </label>
-                <textarea
-                  rows={3}
-                  value={editFormData.requirements}
-                  onChange={(e) => setEditFormData({ ...editFormData, requirements: e.target.value })}
-                  placeholder="Contoh: Mahasiswa aktif S1/D3, KTM aktif, maksimal 3 orang per tim..."
-                  className="w-full p-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                />
-              </div>
-
-              {/* Link Pendaftaran & Kontak */}
-              <div>
-                <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                  Link Formulir Pendaftaran Resmi *
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.registration_url}
-                  onChange={(e) => setEditFormData({ ...editFormData, registration_url: e.target.value })}
-                  placeholder="https://bit.ly/daftar-lomba atau link resmi"
-                  className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                    Kontak Narahubung
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.contact}
-                    onChange={(e) => setEditFormData({ ...editFormData, contact: e.target.value })}
-                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                    placeholder="0812-xxxx-xxxx (WA)"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold mb-1 text-zinc-900 dark:text-zinc-100">
-                    Sumber Informasi / Web Penyelenggara
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.source_url}
-                    onChange={(e) => setEditFormData({ ...editFormData, source_url: e.target.value })}
-                    className="w-full min-h-11 px-3 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-orange-500"
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
-            </form>
-
-            {/* Modal Footer (Sticky) */}
-            <div className="p-4 sm:px-6 border-t border-stone-100 dark:border-zinc-800 bg-stone-50/80 dark:bg-zinc-950/80 flex items-center justify-end gap-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => setEditModalOpen(false)}
-                className="min-h-11 px-4 rounded-xl border border-stone-300 dark:border-zinc-700 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                form="editCompForm"
-                disabled={isUpdating}
-                className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
-              >
-                {isUpdating ? <Loader2 size={14} className="animate-spin" /> : null}
-                <span>Kirim Ulang Verifikasi</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── Modal Edit / Perbaikan Lomba (Extracted Component) ── */}
+      <EditCompetitionModal
+        isOpen={editModalOpen}
+        competition={editingComp}
+        categories={categories}
+        token={token}
+        apiBaseUrl={API}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingComp(null);
+        }}
+        onSuccess={(msg) => {
+          setToastMessage(msg);
+          setTimeout(() => setToastMessage(null), 4000);
+          fetchMyCompetitions();
+        }}
+      />
 
       {/* ── Modal Konfirmasi Hapus ── */}
       {deleteModalOpen && (
@@ -818,9 +491,9 @@ export default function UserDashboardPage() {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="min-h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                className="min-h-11 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs transition-colors"
               >
-                {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <span>Ya, Hapus</span>}
+                {isDeleting ? 'Menghapus…' : 'Ya, Hapus'}
               </button>
             </div>
           </div>
@@ -829,4 +502,3 @@ export default function UserDashboardPage() {
     </main>
   );
 }
-

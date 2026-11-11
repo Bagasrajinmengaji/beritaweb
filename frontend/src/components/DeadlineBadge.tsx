@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 import { RegistrationStatus } from '@/types/competition';
 
 interface DeadlineBadgeProps {
