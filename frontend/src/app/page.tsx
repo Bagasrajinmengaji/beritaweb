@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Trophy,
@@ -13,27 +13,31 @@ import {
   Calendar,
   AlertCircle,
   RefreshCw,
-} from 'lucide-react';
-import { CompetitionListItem, Category } from '@/types/competition';
-import { CompetitionCard } from '@/components/CompetitionCard';
-import { CompetitionCardSkeleton } from '@/components/CompetitionCardSkeleton';
+} from "lucide-react";
+import { CompetitionListItem, Category } from "@/types/competition";
+import { CompetitionCard } from "@/components/CompetitionCard";
+import { CompetitionCardSkeleton } from "@/components/CompetitionCardSkeleton";
 
 export default function HomePage() {
   const router = useRouter();
 
   // State pencarian
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // State data dari API
   const [categories, setCategories] = useState<Category[]>([]);
-  const [latestCompetitions, setLatestCompetitions] = useState<CompetitionListItem[]>([]);
-  const [closingSoonCompetitions, setClosingSoonCompetitions] = useState<CompetitionListItem[]>([]);
+  const [latestCompetitions, setLatestCompetitions] = useState<
+    CompetitionListItem[]
+  >([]);
+  const [closingSoonCompetitions, setClosingSoonCompetitions] = useState<
+    CompetitionListItem[]
+  >([]);
 
   // State loading & error
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
+  const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api";
 
   const fetchData = async () => {
     setLoading(true);
@@ -42,21 +46,25 @@ export default function HomePage() {
     try {
       // Fetch kategori, lomba terbaru, dan lomba segera berakhir secara paralel
       const [catRes, latestRes, closingRes] = await Promise.all([
-        fetch(`${API}/categories`).then((r) => (r.ok ? r.json() : { data: [] })),
+        fetch(`${API}/categories`).then((r) =>
+          r.ok ? r.json() : { data: [] },
+        ),
         fetch(`${API}/competitions?per_page=6&sort=newest`).then((r) =>
-          r.ok ? r.json() : { data: [] }
+          r.ok ? r.json() : { data: [] },
         ),
-        fetch(`${API}/competitions?per_page=4&sort=deadline_asc&deadline_status=segera`).then((r) =>
-          r.ok ? r.json() : { data: [] }
-        ),
+        fetch(
+          `${API}/competitions?per_page=4&sort=deadline_asc&deadline_status=segera`,
+        ).then((r) => (r.ok ? r.json() : { data: [] })),
       ]);
 
       setCategories(catRes.data || []);
       setLatestCompetitions(latestRes.data || []);
       setClosingSoonCompetitions(closingRes.data || []);
     } catch (err) {
-      console.error('Error fetching homepage data:', err);
-      setError('Gagal memuat data informasi lomba. Pastikan server backend sudah berjalan.');
+      console.error("Error fetching homepage data:", err);
+      setError(
+        "Gagal memuat data informasi lomba. Pastikan server backend sudah berjalan.",
+      );
     } finally {
       setLoading(false);
     }
@@ -71,37 +79,35 @@ export default function HomePage() {
     if (searchQuery.trim()) {
       router.push(`/lomba?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      router.push('/lomba');
+      router.push("/lomba");
     }
   };
 
   return (
     <main className="min-h-screen bg-stone-50 dark:bg-zinc-950 pb-16">
-      {/* ── 1. Hero Section Ringkas & Padat Sesuai Superprompt ── */}
-      <section className="relative overflow-hidden border-b border-stone-200 dark:border-zinc-800 bg-linear-to-b from-orange-50/60 via-stone-50 to-stone-50 dark:from-zinc-900/60 dark:via-zinc-950 dark:to-zinc-950 pt-6 pb-8 sm:pt-10 sm:pb-12">
+      {/* ── 1. Hero Section Ringkas & Bersih ── */}
+      <section className="relative overflow-hidden border-b border-stone-200 dark:border-zinc-800 bg-linear-to-b from-orange-50/60 via-stone-50 to-stone-50 dark:from-zinc-900/60 dark:via-zinc-950 dark:to-zinc-950 pt-8 pb-10 sm:pt-12 sm:pb-14">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-3 sm:space-y-4">
-            {/* Pill Kampus */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-950/70 border border-orange-200 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 text-xs font-semibold shadow-2xs">
-              <Sparkles size={13} className="text-orange-600 dark:text-orange-400" />
-              <span>Pusat Prestasi Mahasiswa UMPKU Surakarta</span>
-            </div>
-
-            {/* Heading Sesuai Superprompt */}
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
-              Temukan Lomba yang Sesuai dengan{' '}
-              <span className="text-orange-600 dark:text-orange-500">Minat & Program Studimu</span>
+          <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+            {/* Heading */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+              Temukan Lomba yang Sesuai dengan{" "}
+              <span className="text-orange-600 dark:text-orange-500">
+                Minat & Program Studimu
+              </span>
             </h1>
 
-            {/* Subheading Sesuai Superprompt */}
-            <p className="text-sm sm:text-base text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed">
-              Jelajahi informasi kompetisi, cek batas deadline pendaftaran, dan temukan peluang prestasi kemahasiswaan UMPKU Surakarta.
-            </p>
-
             {/* ── 2. Search Bar Cepat & Responsif Mobile ── */}
-            <form onSubmit={handleSearchSubmit} className="pt-2 sm:pt-3 max-w-2xl mx-auto">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="pt-1 sm:pt-2 max-w-2xl mx-auto"
+            >
               <div className="relative flex items-center shadow-md rounded-2xl bg-white dark:bg-zinc-900 border border-stone-300 dark:border-zinc-700 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all p-1.5">
-                <Search size={18} className="ml-2.5 sm:ml-3 text-stone-400 shrink-0" aria-hidden="true" />
+                <Search
+                  size={18}
+                  className="ml-2.5 sm:ml-3 text-stone-400 shrink-0"
+                  aria-hidden="true"
+                />
                 <input
                   type="text"
                   value={searchQuery}
@@ -120,17 +126,14 @@ export default function HomePage() {
               </div>
             </form>
 
-            {/* ── 3. Quick Category Pills ── */}
+            {/* ── 3. Category Pills Langsung ── */}
             {categories.length > 0 && (
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-                <span className="text-xs text-stone-500 dark:text-stone-400 font-medium mr-1">
-                  Kategori Populer:
-                </span>
-                {categories.slice(0, 5).map((cat) => (
+              <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                {categories.slice(0, 6).map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/lomba?category=${cat.slug}`}
-                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-700 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-2xs"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-700 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-2xs"
                   >
                     {cat.name}
                   </Link>
@@ -182,7 +185,7 @@ export default function HomePage() {
                     Segera Ditutup
                   </h2>
                   <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-                    Batas pendaftaran kurang dari 7 hari. Jangan lewatkan kesempatan ini!
+                    Batas pendaftaran kurang dari 7 hari
                   </p>
                 </div>
               </div>
@@ -205,7 +208,11 @@ export default function HomePage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {closingSoonCompetitions.map((comp, idx) => (
-                  <CompetitionCard key={comp.id} competition={comp} index={idx} />
+                  <CompetitionCard
+                    key={comp.id}
+                    competition={comp}
+                    index={idx}
+                  />
                 ))}
               </div>
             )}
@@ -263,7 +270,7 @@ export default function HomePage() {
                 Belum ada informasi lomba yang tersedia
               </h3>
               <p className="text-sm text-stone-500 dark:text-stone-400 max-w-md mx-auto">
-                Punya info lomba tingkat regional, nasional, atau internasional? Bagikan ke teman-teman mahasiswa sekarang.
+                Punya info lomba? Bagikan ke teman-teman mahasiswa sekarang.
               </p>
               <Link
                 href="/lomba/tambah"
@@ -287,7 +294,9 @@ export default function HomePage() {
               Punya Informasi Lomba Menarik? Bagikan ke Mahasiswa Lain!
             </h2>
             <p className="text-orange-100 text-sm sm:text-base leading-relaxed">
-              Bantu rekan-rekan mahasiswa UMPKU Surakarta menemukan peluang prestasi dan kejuaraan. Setiap pengajuan akan diverifikasi oleh admin sebelum tampil kepada publik.
+              Bantu rekan-rekan mahasiswa UMPKU Surakarta menemukan peluang
+              prestasi dan kejuaraan. Setiap pengajuan akan diverifikasi oleh
+              admin sebelum tampil kepada publik.
             </p>
             <div className="pt-2">
               <Link
