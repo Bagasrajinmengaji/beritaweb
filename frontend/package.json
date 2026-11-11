@@ -10,16 +10,11 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
-    "@tinymce/tinymce-react": "^6.3.1",
-    "@tiptap/pm": "^3.32.0",
-    "@tiptap/react": "^3.32.0",
-    "@tiptap/starter-kit": "^3.32.0",
     "lucide-react": "^1.61.0",
     "next": "16.4.2",
     "next-themes": "^0.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-quill-new": "^3.8.3"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
