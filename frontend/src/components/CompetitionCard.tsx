@@ -127,10 +127,10 @@ export function CompetitionCard({ competition, index = 0 }: CompetitionCardProps
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
-            <Calendar size={12} className="text-stone-400" aria-hidden="true" />
+          <div className="flex items-center gap-1.5 font-medium text-stone-600 dark:text-stone-300">
+            <Calendar size={13} className="text-orange-500" aria-hidden="true" />
             <time dateTime={competition.registration_deadline}>
-              Batas: {formatDate(competition.registration_deadline)}
+              Batas: <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formatDate(competition.registration_deadline)}</span>
             </time>
           </div>
         </div>

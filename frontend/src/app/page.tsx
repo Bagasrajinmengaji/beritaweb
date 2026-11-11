@@ -77,45 +77,44 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-stone-50 dark:bg-zinc-950 pb-16">
-      {/* ── 1. Hero Section Sederhana & Ringkas Sesuai Superprompt ── */}
-      <section className="relative overflow-hidden border-b border-stone-200 dark:border-zinc-800 bg-linear-to-b from-orange-50/60 via-stone-50 to-stone-50 dark:from-zinc-900/60 dark:via-zinc-950 dark:to-zinc-950 pt-10 pb-14 sm:pt-14 sm:pb-20">
+      {/* ── 1. Hero Section Ringkas & Padat Sesuai Superprompt ── */}
+      <section className="relative overflow-hidden border-b border-stone-200 dark:border-zinc-800 bg-linear-to-b from-orange-50/60 via-stone-50 to-stone-50 dark:from-zinc-900/60 dark:via-zinc-950 dark:to-zinc-950 pt-6 pb-8 sm:pt-10 sm:pb-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4">
+          <div className="max-w-3xl mx-auto text-center space-y-3 sm:space-y-4">
             {/* Pill Kampus */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 dark:bg-orange-950/70 border border-orange-200 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 text-xs font-semibold shadow-2xs">
-              <Sparkles size={14} className="text-orange-600 dark:text-orange-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-950/70 border border-orange-200 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 text-xs font-semibold shadow-2xs">
+              <Sparkles size={13} className="text-orange-600 dark:text-orange-400" />
               <span>Pusat Prestasi Mahasiswa UMPKU Surakarta</span>
             </div>
 
             {/* Heading Sesuai Superprompt */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
               Temukan Lomba yang Sesuai dengan{' '}
-              <span className="text-orange-600 dark:text-orange-500">Minat dan Program Studimu</span>
+              <span className="text-orange-600 dark:text-orange-500">Minat & Program Studimu</span>
             </h1>
 
             {/* Subheading Sesuai Superprompt */}
-            <p className="text-base sm:text-lg text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed">
-              Jelajahi informasi kompetisi, cek batas pendaftaran, dan bagikan peluang lomba kepada
-              mahasiswa UMPKU Surakarta.
+            <p className="text-sm sm:text-base text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed">
+              Jelajahi informasi kompetisi, cek batas deadline pendaftaran, dan temukan peluang prestasi kemahasiswaan UMPKU Surakarta.
             </p>
 
-            {/* ── 2. Search Bar Cepat ── */}
-            <form onSubmit={handleSearchSubmit} className="pt-4 max-w-2xl mx-auto">
+            {/* ── 2. Search Bar Cepat & Responsif Mobile ── */}
+            <form onSubmit={handleSearchSubmit} className="pt-2 sm:pt-3 max-w-2xl mx-auto">
               <div className="relative flex items-center shadow-md rounded-2xl bg-white dark:bg-zinc-900 border border-stone-300 dark:border-zinc-700 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all p-1.5">
-                <Search size={20} className="ml-3 text-stone-400 shrink-0" aria-hidden="true" />
+                <Search size={18} className="ml-2.5 sm:ml-3 text-stone-400 shrink-0" aria-hidden="true" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari judul lomba, penyelenggara, atau kata kunci..."
-                  className="w-full px-3 py-2.5 text-base sm:text-sm bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-stone-400 focus:outline-none"
+                  className="w-full px-2 sm:px-3 py-2 text-sm bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-stone-400 focus:outline-none"
                   aria-label="Cari informasi lomba"
                 />
                 <button
                   type="submit"
-                  className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-semibold text-sm transition-colors duration-150 shrink-0 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                  className="min-h-10 sm:min-h-11 px-3.5 sm:px-5 rounded-xl bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-semibold text-xs sm:text-sm transition-colors duration-150 shrink-0 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                 >
-                  <span>Cari Lomba</span>
+                  <span className="hidden xs:inline sm:inline">Cari Lomba</span>
                   <ArrowRight size={14} aria-hidden="true" />
                 </button>
               </div>
@@ -123,7 +122,7 @@ export default function HomePage() {
 
             {/* ── 3. Quick Category Pills ── */}
             {categories.length > 0 && (
-              <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                 <span className="text-xs text-stone-500 dark:text-stone-400 font-medium mr-1">
                   Kategori Populer:
                 </span>
@@ -131,7 +130,7 @@ export default function HomePage() {
                   <Link
                     key={cat.id}
                     href={`/lomba?category=${cat.slug}`}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-700 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-2xs"
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-700 dark:text-stone-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-2xs"
                   >
                     {cat.name}
                   </Link>
@@ -149,7 +148,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Content Container ── */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-12 space-y-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 space-y-12 sm:space-y-14">
         {/* Error Notification */}
         {error && (
           <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-red-700 dark:text-red-300 text-sm">

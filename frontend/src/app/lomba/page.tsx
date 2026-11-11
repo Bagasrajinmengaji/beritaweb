@@ -11,9 +11,13 @@ import {
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
   X,
   SearchX,
   PlusCircle,
+  GraduationCap,
+  Layers,
   Sparkles,
 } from 'lucide-react';
 import {
@@ -47,8 +51,10 @@ function LombaKatalogContent() {
   const [sort, setSort] = useState(initialSort);
   const [page, setPage] = useState(initialPage);
 
-  // Mobile Filter Drawer State
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  // Toggle filter lanjutan (Desktop & Mobile)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(
+    Boolean(initialLevel || initialDeadlineStatus || (initialSort && initialSort !== 'newest'))
+  );
 
   // Master Data & Result State
   const [categories, setCategories] = useState<Category[]>([]);
@@ -79,7 +85,22 @@ function LombaKatalogContent() {
       .catch((err) => console.error('Error fetching master filters:', err));
   }, [API]);
 
-  // 2. Fetch data lomba sesuai filter saat query berubah
+  // 2. Sinkronkan state internal saat URL query berubah (back/forward atau navigasi dari luar)
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+    setCategory(searchParams.get('category') || '');
+    setStudyProgram(searchParams.get('study_program') || '');
+    setLevel(searchParams.get('level') || '');
+    setDeadlineStatus(searchParams.get('deadline_status') || '');
+    setSort(searchParams.get('sort') || 'newest');
+    setPage(parseInt(searchParams.get('page') || '1', 10));
+
+    if (searchParams.get('level') || searchParams.get('deadline_status') || (searchParams.get('sort') && searchParams.get('sort') !== 'newest')) {
+      setShowAdvancedFilters(true);
+    }
+  }, [searchParams]);
+
+  // 3. Fetch data lomba sesuai filter
   const fetchCompetitions = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -114,7 +135,7 @@ function LombaKatalogContent() {
     fetchCompetitions();
   }, [fetchCompetitions]);
 
-  // Update URL parameters saat filter diterapkan
+  // Helper pembaruan query URL
   const applyFilters = (newParams: Record<string, string | number>) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -143,6 +164,12 @@ function LombaKatalogContent() {
     });
   };
 
+  const handleClearSearch = () => {
+    setSearch('');
+    setPage(1);
+    applyFilters({ search: '', page: 1 });
+  };
+
   const handleResetFilters = () => {
     setSearch('');
     setCategory('');
@@ -154,14 +181,20 @@ function LombaKatalogContent() {
     router.push('/lomba');
   };
 
+  // Cek apakah filter lanjutan aktif
+  const advancedCount =
+    (level ? 1 : 0) +
+    (deadlineStatus ? 1 : 0) +
+    (sort && sort !== 'newest' ? 1 : 0);
+
   const hasActiveFilters = Boolean(
-    search || category || studyProgram || level || deadlineStatus || sort !== 'newest'
+    search || category || studyProgram || level || deadlineStatus || (sort && sort !== 'newest')
   );
 
   return (
     <main className="min-h-screen bg-stone-50 dark:bg-zinc-950 pb-20">
-      {/* ── Header Katalog ── */}
-      <section className="border-b border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-8">
+      {/* ── Header Katalog Ringkas ── */}
+      <section className="border-b border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-6 sm:py-8">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -172,8 +205,8 @@ function LombaKatalogContent() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">
                 Jelajahi Peluang & Kompetisi
               </h1>
-              <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
-                Temukan lomba yang sesuai dengan bidang keahlian dan program studi sasaranmu.
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1">
+                Temukan lomba yang sesuai dengan bidang keahlian dan program studi sasaranmu di UMPKU Surakarta.
               </p>
             </div>
 
@@ -188,10 +221,10 @@ function LombaKatalogContent() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-8">
-        {/* ── Search Bar & Filter Controls ── */}
-        <div className="bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs mb-8 space-y-4">
-          {/* Baris 1: Pencarian Teks & Tombol Filter Mobile */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+        {/* ── Kotak Filter Terstruktur (Utama & Lanjutan) ── */}
+        <div className="bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs mb-6 space-y-4">
+          {/* Baris 1: Pencarian Cepat dengan Tombol Reset Instan */}
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <Search
@@ -203,60 +236,37 @@ function LombaKatalogContent() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari berdasarkan judul lomba, penyelenggara..."
-                className="w-full min-h-11 pl-10 pr-4 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 placeholder:text-stone-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                placeholder="Cari judul lomba, penyelenggara, atau kata kunci..."
+                className="w-full min-h-11 pl-10 pr-10 text-sm rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 placeholder:text-stone-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-1 rounded-md"
+                  aria-label="Hapus teks pencarian"
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
 
             <button
               type="submit"
-              className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shrink-0"
+              className="min-h-11 px-5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shrink-0 flex items-center gap-1.5"
             >
-              Cari
-            </button>
-
-            {/* Toggle Filter di Mobile */}
-            <button
-              type="button"
-              onClick={() => setMobileFilterOpen((prev) => !prev)}
-              className="md:hidden min-h-11 px-3.5 rounded-xl border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-800 text-stone-700 dark:text-stone-300 font-medium text-sm flex items-center gap-1.5 shrink-0"
-              aria-label="Filter"
-            >
-              <SlidersHorizontal size={16} />
-              <span>Filter</span>
+              <span>Cari</span>
             </button>
           </form>
 
-          {/* Baris 2: Filter Dropdown (Desktop & Expandable Mobile) */}
-          <div className={`${mobileFilterOpen ? 'block' : 'hidden'} md:block pt-3 border-t border-stone-100 dark:border-zinc-800`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              {/* Filter Kategori */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                  Kategori Lomba
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                    setPage(1);
-                    applyFilters({ category: e.target.value, page: 1 });
-                  }}
-                  className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-orange-500"
-                >
-                  <option value="">Semua Kategori</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.slug}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Filter Program Studi */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                  Program Studi Sasaran
+          {/* Baris 2: Filter Utama (Program Studi & Kategori Bidang) */}
+          <div className="pt-3 border-t border-stone-100 dark:border-zinc-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+              {/* Filter 1: Program Studi Sasaran (Paling Utama bagi Mahasiswa) */}
+              <div className="lg:col-span-5">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                  <GraduationCap size={14} className="text-orange-500" />
+                  <span>Program Studi Sasaran</span>
                 </label>
                 <select
                   value={studyProgram}
@@ -267,7 +277,7 @@ function LombaKatalogContent() {
                   }}
                   className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-orange-500"
                 >
-                  <option value="">Semua Program Studi</option>
+                  <option value="">Semua Program Studi (Semua Mahasiswa)</option>
                   {studyPrograms.map((p) => (
                     <option key={p.id} value={p.slug}>
                       {p.name}
@@ -276,96 +286,268 @@ function LombaKatalogContent() {
                 </select>
               </div>
 
-              {/* Filter Tingkat Kompetisi */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                  Tingkat Kompetisi
+              {/* Filter 2: Kategori Lomba */}
+              <div className="lg:col-span-4">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                  <Layers size={14} className="text-orange-500" />
+                  <span>Kategori Bidang</span>
                 </label>
                 <select
-                  value={level}
+                  value={category}
                   onChange={(e) => {
-                    setLevel(e.target.value);
+                    setCategory(e.target.value);
                     setPage(1);
-                    applyFilters({ level: e.target.value, page: 1 });
+                    applyFilters({ category: e.target.value, page: 1 });
                   }}
                   className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-orange-500"
                 >
-                  <option value="">Semua Tingkat</option>
-                  <option value="Internasional">Internasional</option>
-                  <option value="Nasional">Nasional</option>
-                  <option value="Provinsi">Provinsi</option>
-                  <option value="Regional">Regional</option>
-                  <option value="Internal Kampus">Internal Kampus</option>
+                  <option value="">Semua Kategori Bidang</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Urutkan (Sorting) */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                  Urutkan Berdasarkan
-                </label>
-                <select
-                  value={sort}
-                  onChange={(e) => {
-                    setSort(e.target.value);
-                    applyFilters({ sort: e.target.value, page: 1 });
-                  }}
-                  className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-orange-500"
-                >
-                  <option value="newest">Paling Baru Ditambahkan</option>
-                  <option value="deadline_asc">Deadline Paling Dekat</option>
-                  <option value="deadline_desc">Deadline Paling Lama</option>
-                  <option value="title_asc">Judul Lomba (A - Z)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Baris 3: Pills Status Deadline & Tombol Reset */}
-            <div className="mt-4 pt-3 border-t border-stone-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 mr-1">
-                  Status Pendaftaran:
-                </span>
-                {[
-                  { label: 'Semua Status', value: '' },
-                  { label: 'Pendaftaran Dibuka', value: 'dibuka' },
-                  { label: 'Segera Ditutup', value: 'segera' },
-                  { label: 'Pendaftaran Ditutup', value: 'ditutup' },
-                ].map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => {
-                      setDeadlineStatus(s.value);
-                      setPage(1);
-                      applyFilters({ deadline_status: s.value, page: 1 });
-                    }}
-                    className={`min-h-11 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      deadlineStatus === s.value
-                        ? 'bg-orange-600 text-white shadow-xs'
-                        : 'bg-stone-100 dark:bg-zinc-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-zinc-700'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-
-              {hasActiveFilters && (
+              {/* Tombol Toggle Filter Lanjutan */}
+              <div className="lg:col-span-3 flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleResetFilters}
-                  className="min-h-11 inline-flex items-center gap-1.5 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline"
+                  onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                  className={`w-full min-h-11 px-3.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-colors ${
+                    showAdvancedFilters || advancedCount > 0
+                      ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300'
+                      : 'border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-zinc-700'
+                  }`}
                 >
-                  <RotateCcw size={12} />
-                  <span>Reset Filter</span>
+                  <span className="flex items-center gap-1.5">
+                    <SlidersHorizontal size={14} />
+                    <span>Filter Lanjutan</span>
+                    {advancedCount > 0 && (
+                      <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-orange-600 text-white">
+                        {advancedCount}
+                      </span>
+                    )}
+                  </span>
+                  {showAdvancedFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
-              )}
+              </div>
             </div>
           </div>
+
+          {/* Baris 3: Panel Filter Lanjutan (Collapsible) */}
+          {showAdvancedFilters && (
+            <div className="pt-4 border-t border-dashed border-stone-200 dark:border-zinc-800 space-y-4 animate-in fade-in duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {/* Tingkat Kompetisi */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Tingkat Kompetisi
+                  </label>
+                  <select
+                    value={level}
+                    onChange={(e) => {
+                      setLevel(e.target.value);
+                      setPage(1);
+                      applyFilters({ level: e.target.value, page: 1 });
+                    }}
+                    className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-orange-500"
+                  >
+                    <option value="">Semua Tingkat</option>
+                    <option value="Internasional">Internasional</option>
+                    <option value="Nasional">Nasional</option>
+                    <option value="Provinsi">Provinsi</option>
+                    <option value="Regional">Regional</option>
+                    <option value="Internal Kampus">Internal Kampus</option>
+                  </select>
+                </div>
+
+                {/* Urutkan Berdasarkan */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Urutkan Berdasarkan
+                  </label>
+                  <select
+                    value={sort}
+                    onChange={(e) => {
+                      setSort(e.target.value);
+                      applyFilters({ sort: e.target.value, page: 1 });
+                    }}
+                    className="w-full min-h-11 px-3 text-xs rounded-xl bg-stone-50 dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-orange-500"
+                  >
+                    <option value="newest">Paling Baru Ditambahkan</option>
+                    <option value="deadline_asc">Deadline Paling Dekat</option>
+                    <option value="deadline_desc">Deadline Paling Lama</option>
+                    <option value="title_asc">Judul Lomba (A - Z)</option>
+                  </select>
+                </div>
+
+                {/* Filter Biaya Pendaftaran Cepat (Gratis / Semua) */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Biaya Pendaftaran
+                  </label>
+                  <div className="flex items-center gap-2 h-11">
+                    <span className="text-xs text-stone-500 dark:text-stone-400">
+                      Tersedia lomba gratis & berbayar dengan hadiah menarik
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Pendaftaran (Pills dengan Warna Status Standar) */}
+              <div className="pt-3 border-t border-stone-100 dark:border-zinc-800">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-stone-600 dark:text-stone-400 mr-1">
+                    Batas Pendaftaran:
+                  </span>
+                  {[
+                    { label: 'Semua Status', value: '' },
+                    { label: 'Pendaftaran Dibuka', value: 'dibuka' },
+                    { label: 'Segera Ditutup (< 7 Hari)', value: 'segera' },
+                    { label: 'Pendaftaran Ditutup', value: 'ditutup' },
+                  ].map((s) => {
+                    const isSelected = deadlineStatus === s.value;
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => {
+                          setDeadlineStatus(s.value);
+                          setPage(1);
+                          applyFilters({ deadline_status: s.value, page: 1 });
+                        }}
+                        className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          isSelected
+                            ? s.value === 'ditutup'
+                              ? 'bg-rose-600 text-white shadow-xs'
+                              : s.value === 'segera'
+                              ? 'bg-amber-600 text-white shadow-xs'
+                              : s.value === 'dibuka'
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-orange-600 text-white shadow-xs'
+                            : 'bg-stone-100 dark:bg-zinc-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-zinc-700'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ── Informasi Jumlah Temuan ── */}
+        {/* ── Active Filter Chips (Pills Filter Aktif dengan tombol hapus satu per satu) ── */}
+        {hasActiveFilters && (
+          <div className="mb-6 flex flex-wrap items-center gap-2 bg-stone-100/70 dark:bg-zinc-900/60 border border-stone-200/80 dark:border-zinc-800 p-3 rounded-2xl">
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 mr-1">
+              Filter Aktif:
+            </span>
+
+            {/* Chip Pencarian */}
+            {search.trim() && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800 hover:bg-orange-200 transition-colors"
+                title="Hapus filter pencarian ini"
+              >
+                <span>Kata Kunci: &ldquo;{search}&rdquo;</span>
+                <X size={12} />
+              </button>
+            )}
+
+            {/* Chip Prodi */}
+            {studyProgram && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStudyProgram('');
+                  applyFilters({ study_program: '', page: 1 });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-stone-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-600 transition-colors"
+                title="Hapus filter prodi ini"
+              >
+                <span>
+                  Prodi: {studyPrograms.find((p) => p.slug === studyProgram)?.name || studyProgram}
+                </span>
+                <X size={12} />
+              </button>
+            )}
+
+            {/* Chip Kategori */}
+            {category && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCategory('');
+                  applyFilters({ category: '', page: 1 });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-stone-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-600 transition-colors"
+                title="Hapus filter kategori ini"
+              >
+                <span>
+                  Kategori: {categories.find((c) => c.slug === category)?.name || category}
+                </span>
+                <X size={12} />
+              </button>
+            )}
+
+            {/* Chip Tingkat */}
+            {level && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLevel('');
+                  applyFilters({ level: '', page: 1 });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-stone-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-600 transition-colors"
+                title="Hapus filter tingkat ini"
+              >
+                <span>Tingkat: {level}</span>
+                <X size={12} />
+              </button>
+            )}
+
+            {/* Chip Status Deadline */}
+            {deadlineStatus && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDeadlineStatus('');
+                  applyFilters({ deadline_status: '', page: 1 });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-stone-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-600 transition-colors"
+                title="Hapus filter status ini"
+              >
+                <span>
+                  Status:{' '}
+                  {deadlineStatus === 'segera'
+                    ? 'Segera Ditutup'
+                    : deadlineStatus === 'dibuka'
+                    ? 'Pendaftaran Dibuka'
+                    : 'Pendaftaran Ditutup'}
+                </span>
+                <X size={12} />
+              </button>
+            )}
+
+            {/* Tombol Reset Semua */}
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline cursor-pointer ml-auto"
+            >
+              <RotateCcw size={12} />
+              <span>Reset Semua</span>
+            </button>
+          </div>
+        )}
+
+        {/* ── Informasi Jumlah Temuan Lomba ── */}
         <div className="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 mb-6 px-1">
           <span>
             Menampilkan <strong>{competitions.length}</strong> dari <strong>{meta.total}</strong> informasi lomba
@@ -391,16 +573,16 @@ function LombaKatalogContent() {
             ))}
           </div>
         ) : (
-          /* Empty State Sesuai Superprompt */
+          /* Empty State yang Membimbing Pengguna */
           <div className="rounded-3xl border border-dashed border-stone-300 dark:border-zinc-800 p-12 text-center space-y-4 bg-white/50 dark:bg-zinc-900/50">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100 dark:bg-zinc-800 text-stone-500">
               <SearchX size={28} />
             </div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-              Tidak ada lomba yang sesuai dengan pencarianmu.
+              Tidak ada lomba yang sesuai dengan filter pencarian.
             </h3>
             <p className="text-sm text-stone-500 dark:text-stone-400 max-w-md mx-auto">
-              Coba gunakan kata kunci yang lebih umum atau sesuaikan filter program studi dan status pendaftaran.
+              Coba gunakan kata kunci yang lebih umum atau kosongkan filter program studi dan status pendaftaran.
             </p>
             {hasActiveFilters && (
               <button
@@ -415,7 +597,7 @@ function LombaKatalogContent() {
           </div>
         )}
 
-        {/* ── Pagination ── */}
+        {/* ── Pagination Navigasi ── */}
         {!loading && meta.last_page > 1 && (
           <div className="mt-12 flex items-center justify-center gap-2">
             <button
@@ -478,4 +660,3 @@ export default function LombaKatalogPage() {
     </Suspense>
   );
 }
-

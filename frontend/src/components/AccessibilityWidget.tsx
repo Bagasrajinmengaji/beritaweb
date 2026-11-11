@@ -283,13 +283,13 @@ export function AccessibilityWidget() {
         aria-controls="accessibility-menu-panel"
         aria-label="Buka Menu Aksesibilitas (Ukuran teks, kontras, pembaca layar)"
         className={[
-          'fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full px-4 py-3 shadow-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/50',
+          'fixed bottom-5 left-4 sm:bottom-6 sm:left-6 z-40 flex items-center justify-center gap-2 rounded-full p-3 sm:px-4 sm:py-3 shadow-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/50',
           'bg-orange-600 hover:bg-orange-700 text-white active:scale-95 cursor-pointer',
           isOpen ? 'ring-4 ring-orange-500/40 scale-105' : 'hover:scale-105',
         ].join(' ')}
       >
         <UniversalAccessIcon size={20} />
-        <span className="font-semibold text-xs tracking-wide">
+        <span className="hidden sm:inline font-semibold text-xs tracking-wide">
           Aksesibilitas
         </span>
       </button>
@@ -318,7 +318,7 @@ export function AccessibilityWidget() {
                   Menu Aksesibilitas
                 </h2>
                 <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                  Sesuaikan tampilan & dengarkan berita
+                  Sesuaikan tampilan & dengarkan konten
                 </p>
               </div>
             </div>
@@ -355,7 +355,7 @@ export function AccessibilityWidget() {
                 </span>
               </div>
               <p className="text-[11px] text-stone-600 dark:text-stone-300 mb-3">
-                Dengarkan isi artikel berita atau teks yang Anda pilih secara otomatis.
+                Dengarkan informasi lomba atau teks yang Anda pilih secara otomatis.
               </p>
 
               {ttsSupported ? (

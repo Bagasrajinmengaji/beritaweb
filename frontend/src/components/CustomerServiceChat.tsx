@@ -447,7 +447,7 @@ export function CustomerServiceChat({
         aria-controls="cs-chat-panel"
         aria-label="Buka Chat Customer Service Admin"
         className={[
-          'fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full px-4 py-3 shadow-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/50 cursor-pointer',
+          'fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center gap-2.5 rounded-full p-3 sm:px-4 sm:py-3 shadow-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/50 cursor-pointer',
           'bg-orange-600 hover:bg-orange-700 text-white active:scale-[0.98]',
           isOpen ? 'ring-4 ring-orange-500/40 scale-105' : 'hover:scale-105',
         ].join(' ')}
@@ -459,7 +459,7 @@ export function CustomerServiceChat({
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
           </span>
         </div>
-        <span className="font-semibold text-xs tracking-wide">
+        <span className="hidden sm:inline font-semibold text-xs tracking-wide">
           {isAdmin ? 'CS Admin Support' : 'Customer Service'}
         </span>
       </button>
@@ -784,12 +784,12 @@ export function CustomerServiceChat({
               <button
                 type="button"
                 onClick={() => {
-                  setInputText('Mohon konfirmasi status artikel berita saya');
+                  setInputText('Mohon konfirmasi status pengajuan informasi lomba saya');
                   inputRef.current?.focus();
                 }}
                 className="shrink-0 px-2.5 py-1 rounded-full border border-stone-200 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-800/80 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer"
               >
-                📌 Cek Status Berita
+                📌 Cek Status Pengajuan Lomba
               </button>
               <button
                 type="button"
